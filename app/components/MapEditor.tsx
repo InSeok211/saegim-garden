@@ -92,6 +92,8 @@ export default function MapEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const meMarkerRef = useRef<google.maps.Marker | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const firstFixRef = useRef(true);
   const boxObjs = useRef<
     Map<string, { rect: google.maps.Rectangle; label: google.maps.Marker }>
   >(new Map());
@@ -232,29 +234,59 @@ export default function MapEditor() {
   const locate = () => {
     const map = mapRef.current;
     if (!map || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
+
+    // 이미 추적 중이면 현재 위치로 다시 이동만
+    if (watchIdRef.current !== null) {
+      const p = meMarkerRef.current?.getPosition();
+      if (p) map.panTo(p);
+      return;
+    }
+
+    firstFixRef.current = true;
+    // watchPosition: 위치가 바뀔 때마다 계속 갱신 (실시간 추적)
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        const g = window.google;
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(p);
-        meMarkerRef.current?.setMap(null);
-        meMarkerRef.current = new window.google.maps.Marker({
-          position: p,
-          map,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: "#2563eb",
-            fillOpacity: 1,
-            strokeColor: "#fff",
-            strokeWeight: 2,
-          },
-          title: "내 위치",
-        });
+        if (!meMarkerRef.current) {
+          meMarkerRef.current = new g.maps.Marker({
+            position: p,
+            map,
+            icon: {
+              path: g.maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: "#2563eb",
+              fillOpacity: 1,
+              strokeColor: "#fff",
+              strokeWeight: 2,
+            },
+            title: "내 위치",
+            zIndex: 9999,
+          });
+        } else {
+          meMarkerRef.current.setPosition(p);
+        }
+        // 첫 위치에서만 지도 중심 이동 (이후엔 사용자가 지도를 자유롭게 봄)
+        if (firstFixRef.current) {
+          map.setCenter(p);
+          map.setZoom(18);
+          firstFixRef.current = false;
+        }
       },
-      () => alert("위치를 가져올 수 없습니다. 브라우저 위치 권한을 확인해주세요."),
-      { enableHighAccuracy: true, timeout: 10000 },
+      () =>
+        alert("위치를 가져올 수 없습니다. 브라우저 위치 권한을 확인해주세요."),
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 },
     );
   };
+
+  // 언마운트 시 위치 추적 해제
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   // ── 반투명 격자 오버레이 (지도와 함께 이동) ──
   const clearGrid = () => {
