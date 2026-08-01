@@ -1,7 +1,7 @@
 // 지도 위에 놓는 요소 하나의 데이터 구조.
 // 픽셀(x/y)이 아니라 지리 좌표(위도 lat / 경도 lng)를 가진다.
 
-export type MapElementType = "icon" | "label" | "zone";
+export type MapElementType = "marker" | "label" | "zone" | "line";
 
 export type LatLng = { lat: number; lng: number };
 
@@ -21,9 +21,9 @@ export type MapElement = {
   type: MapElementType;
   lat: number; // point 위치 / zone 은 중심(라벨 표시용)
   lng: number;
-  label: string; // label/zone 의 표시 글자
-  color: string; // label 글자색 / zone 채움색
-  icon?: string; // icon 타입의 이모지
+  label: string; // marker 이름 / label 글자 / zone 이름
+  color: string; // label 글자색 / zone 채움색 (marker 색은 카테고리에서)
+  categoryId?: string; // marker 의 카테고리(categories.ts)
   shape?: ZoneShape; // zone 도형 종류
   bounds?: Bounds; // shape === "rect"
   radius?: number; // shape === "circle" (미터)
@@ -91,6 +91,27 @@ export function eastPoint(center: LatLng, radius: number): LatLng {
   return { lat: center.lat, lng: center.lng + dLng };
 }
 
+// 경로(선/다각형) 총 길이(미터)
+export function pathLength(path: LatLng[]): number {
+  let d = 0;
+  for (let i = 1; i < path.length; i++) d += haversine(path[i - 1], path[i]);
+  return d;
+}
+
+// 거리 표시 포맷 (m / km)
+export function formatDistance(m: number): string {
+  return m >= 1000 ? `${(m / 1000).toFixed(2)}km` : `${Math.round(m)}m`;
+}
+
+// 점들의 평균 위치(라벨/중심용)
+export function pathCentroid(path: LatLng[]): LatLng {
+  const s = path.reduce(
+    (a, p) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }),
+    { lat: 0, lng: 0 },
+  );
+  return { lat: s.lat / path.length, lng: s.lng / path.length };
+}
+
 // 구역에 쓸 기본 색 팔레트
 export const ZONE_COLORS = [
   "#86efac", // 초록
@@ -106,19 +127,3 @@ export const ZONE_COLORS = [
 export const DEFAULT_CENTER = { lat: 35.0455, lng: 128.9668 };
 // 카카오맵 줌 단위 level (작을수록 확대. 3~4가 동네 수준)
 export const DEFAULT_LEVEL = 4;
-
-// 팔레트에 노출할 아이콘(이모지) 목록
-export const ICON_SET = [
-  "🚻", // 화장실
-  "ℹ️", // 안내소
-  "🎤", // 스테이지
-  "🅿️", // 주차
-  "🍔", // 음식
-  "⛺", // 캠핑
-  "🚑", // 의무실
-  "🎪", // 부스/텐트
-  "🌳", // 나무/숲
-  "🎡", // 놀이시설
-  "🚪", // 입구
-  "🚌", // 셔틀
-];

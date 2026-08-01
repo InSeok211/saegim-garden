@@ -7,6 +7,7 @@ import {
   CustomOverlayMap,
   Circle,
   Polygon,
+  Polyline,
   useKakaoLoader,
 } from "react-kakao-maps-sdk";
 import {
@@ -20,24 +21,32 @@ import {
   resizeRect,
   haversine,
   eastPoint,
+  pathLength,
+  formatDistance,
 } from "@/app/lib/map-types";
+import { categoryById } from "@/app/lib/categories";
 import type { Preview } from "./MapEditor";
 
 type Props = {
   elements: MapElement[];
-  armed: boolean;
   hint: string | null;
   preview: Preview;
   selectedId: string | null;
+  hiddenCategories: string[]; // 숨긴 카테고리 id
+  query: string; // 검색어
+  draft: LatLng[]; // 다각형/선 그리는 중 점들
+  draftMode: "polygon" | "line" | null;
   onMapClick: (lat: number, lng: number) => void;
   onMouseMove: (lat: number, lng: number) => void;
+  onFinishDraw: () => void;
+  onCancelDraw: () => void;
   onUpdate: (id: string, patch: Partial<MapElement>) => void;
   onSelect: (id: string) => void;
 };
 
-// 마커 이미지들
-function emojiSrc(emoji: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><text x="15" y="23" font-size="24" text-anchor="middle">${emoji}</text></svg>`;
+// 카테고리 색 핀(물방울 모양) 이미지 — 목업 스타일
+function pinSrc(color: string, icon: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="54" viewBox="0 0 40 54"><path d="M20 53 C20 53 37 31 37 18 A17 17 0 1 0 3 18 C3 31 20 53 20 53 Z" fill="${color}" stroke="white" stroke-width="3"/><circle cx="20" cy="18" r="12" fill="white"/><text x="20" y="23" font-size="15" text-anchor="middle">${icon}</text></svg>`;
   return "data:image/svg+xml," + encodeURIComponent(svg);
 }
 function labelSrc(text: string, color: string) {
@@ -71,8 +80,14 @@ export default function MapCanvas({
   hint,
   preview,
   selectedId,
+  hiddenCategories,
+  query,
+  draft,
+  draftMode,
   onMapClick,
   onMouseMove,
+  onFinishDraw,
+  onCancelDraw,
   onUpdate,
   onSelect,
 }: Props) {
@@ -112,22 +127,42 @@ export default function MapCanvas({
 
   if (error) {
     return (
-      <div className="grid h-[600px] place-items-center rounded-xl border text-sm text-red-600">
-        지도를 불러오지 못했습니다. 카카오 키/도메인/서비스 활성화를
-        확인해주세요.
+      <div className="map-state-card px-6 text-red-700" role="alert">
+        <strong className="text-base">지도를 불러오지 못했습니다.</strong>
+        <span className="max-w-md text-sm leading-6">카카오 지도 키, 허용 도메인, 서비스 활성화 상태를 확인해주세요.</span>
       </div>
     );
   }
   if (loading) {
     return (
-      <div className="grid h-[600px] place-items-center rounded-xl border text-zinc-400">
-        지도 불러오는 중…
+      <div className="map-state-card" role="status">
+        <span className="ui-spinner" aria-hidden="true" />
+        <span>지도를 불러오는 중입니다.</span>
       </div>
     );
   }
 
-  const markers = elements.filter((e) => e.type !== "zone");
-  const zones = elements.filter((e) => e.type === "zone");
+  // 검색어 매칭 (이름 / 마커는 카테고리 이름도)
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (el: MapElement) => {
+    if (!q) return true;
+    const name = (el.label ?? "").toLowerCase();
+    const cat =
+      el.type === "marker"
+        ? (categoryById(el.categoryId)?.name.toLowerCase() ?? "")
+        : "";
+    return name.includes(q) || cat.includes(q);
+  };
+
+  // 점 마커(카테고리 마커 + 텍스트 라벨)
+  const markers = elements.filter(
+    (e) =>
+      (e.type === "marker" || e.type === "label") &&
+      !(e.type === "marker" && hiddenCategories.includes(e.categoryId ?? "")) &&
+      matchesQuery(e),
+  );
+  const zones = elements.filter((e) => e.type === "zone" && matchesQuery(e));
+  const lines = elements.filter((e) => e.type === "line" && matchesQuery(e));
 
   // 사각형 크기조절 핸들 (모서리 4개 + 이동용 중심 1개)
   const rectHandles = (id: string, b: Bounds) => {
@@ -208,25 +243,25 @@ export default function MapCanvas({
   );
 
   return (
-    <div className="relative" style={{ height: 600 }}>
+    <div className="relative h-[clamp(440px,58dvh,720px)] min-h-[440px] overflow-hidden rounded-[18px] bg-slate-100 lg:h-[680px]" aria-label="축제 배치도 지도">
       {hint && (
-        <div className="pointer-events-none absolute left-1/2 top-3 z-[100] -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1.5 text-sm text-white shadow">
+        <div className="pointer-events-none absolute left-1/2 top-3 z-[100] w-[calc(100%-112px)] max-w-md -translate-x-1/2 rounded-xl bg-blue-700 px-4 py-3 text-center text-sm font-bold leading-5 text-white shadow-lg max-md:hidden">
           {hint}
         </div>
       )}
 
       <button
         onClick={locate}
-        className="absolute right-3 top-3 z-[100] rounded-lg bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow hover:bg-zinc-50"
+        className="ui-touch absolute right-3 top-3 z-[100] flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-lg hover:bg-slate-50"
       >
-        📍 내 위치
+        <span aria-hidden="true">◎</span> 내 위치
       </button>
 
       <Map
         center={center}
         level={level}
         isPanto
-        style={{ width: "100%", height: "100%", borderRadius: 12 }}
+        style={{ width: "100%", height: "100%", borderRadius: 18 }}
         onClick={(_m, me) => onMapClick(me.latLng.getLat(), me.latLng.getLng())}
         onMouseMove={(_m, me) =>
           onMouseMove(me.latLng.getLat(), me.latLng.getLng())
@@ -269,7 +304,7 @@ export default function MapCanvas({
               <CustomOverlayMap position={{ lat: z.lat, lng: z.lng }}>
                 <div
                   onClick={() => onSelect(z.id)}
-                  className="cursor-pointer whitespace-nowrap rounded bg-white/80 px-1 text-xs font-semibold text-zinc-800"
+                  className="cursor-pointer whitespace-nowrap rounded-lg border border-white/70 bg-white/95 px-2 py-1 text-sm font-bold text-slate-900 shadow-sm"
                 >
                   {z.label}
                 </div>
@@ -283,6 +318,66 @@ export default function MapCanvas({
             </Fragment>
           );
         })}
+
+        {/* 선 · 경로 (거리 표시) */}
+        {lines.map((ln) => {
+          const sel = ln.id === selectedId;
+          const path = ln.path ?? [];
+          return (
+            <Fragment key={ln.id}>
+              <Polyline
+                path={path}
+                strokeColor={ln.color}
+                strokeWeight={sel ? 6 : 4}
+                strokeOpacity={0.9}
+                onClick={() => onSelect(ln.id)}
+              />
+              <CustomOverlayMap position={{ lat: ln.lat, lng: ln.lng }}>
+                <div
+                  onClick={() => onSelect(ln.id)}
+                  className="cursor-pointer whitespace-nowrap rounded-lg border border-white/70 bg-white/95 px-2 py-1 text-xs font-bold text-slate-900 shadow-sm"
+                >
+                  {ln.label} · {formatDistance(pathLength(path))}
+                </div>
+              </CustomOverlayMap>
+            </Fragment>
+          );
+        })}
+
+        {/* 다각형/선 그리는 중 미리보기 */}
+        {draft.length > 0 && (
+          <>
+            {draftMode === "polygon" && draft.length >= 3 && (
+              <Polygon
+                path={draft}
+                fillColor="#2563eb"
+                fillOpacity={0.15}
+                strokeColor="#2563eb"
+                strokeWeight={2}
+                strokeStyle="shortdash"
+              />
+            )}
+            <Polyline
+              path={draft}
+              strokeColor="#2563eb"
+              strokeWeight={2}
+              strokeStyle="shortdash"
+            />
+            {draft.map((p, i) => (
+              <CustomOverlayMap key={i} position={p}>
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 9999,
+                    background: "#2563eb",
+                    border: "1px solid white",
+                  }}
+                />
+              </CustomOverlayMap>
+            ))}
+          </>
+        )}
 
         {/* 그리는 중 미리보기 */}
         {preview?.type === "rect" && (
@@ -309,21 +404,23 @@ export default function MapCanvas({
 
         {/* 마커 */}
         {markers.map((el) => {
-          const image =
-            el.type === "icon"
-              ? {
-                  src: emojiSrc(el.icon ?? "📍"),
-                  size: { width: 30, height: 30 },
-                  options: { offset: { x: 15, y: 15 } },
-                }
-              : (() => {
-                  const { src, w, h } = labelSrc(el.label, el.color);
-                  return {
-                    src,
-                    size: { width: w, height: h },
-                    options: { offset: { x: 2, y: h - 5 } },
-                  };
-                })();
+          let image;
+          if (el.type === "marker") {
+            const cat = categoryById(el.categoryId);
+            image = {
+              src: pinSrc(cat?.color ?? "#64748b", cat?.icon ?? "📍"),
+              size: { width: 40, height: 54 },
+              // 핀 끝(아래 중앙)이 좌표를 가리키도록
+              options: { offset: { x: 20, y: 54 } },
+            };
+          } else {
+            const { src, w, h } = labelSrc(el.label, el.color);
+            image = {
+              src,
+              size: { width: w, height: h },
+              options: { offset: { x: 2, y: h - 5 } },
+            };
+          }
 
           return (
             <MapMarker
@@ -367,6 +464,29 @@ export default function MapCanvas({
           </>
         )}
       </Map>
+
+      {/* 다각형/선 그리기 완료·취소 바 */}
+      {draftMode && (
+        <div className="absolute bottom-3 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-lg">
+          <span className="px-1 text-sm font-semibold text-slate-700">
+            {draftMode === "polygon" ? "다각형" : "선"} · 점 {draft.length}개
+          </span>
+          <button
+            type="button"
+            onClick={onFinishDraw}
+            className="rounded-full bg-blue-600 px-3 py-1.5 text-sm font-bold text-white"
+          >
+            완료
+          </button>
+          <button
+            type="button"
+            onClick={onCancelDraw}
+            className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700"
+          >
+            취소
+          </button>
+        </div>
+      )}
     </div>
   );
 }
