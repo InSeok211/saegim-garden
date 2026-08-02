@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "saegim-garden"
+  },
+  "targets": {
+    "saegim-garden": {
+      "hosting": {
+        "app": ["saegim-garden"],
+        "festival": ["dadaepo-festival"]
+      }
+    }
+  }
+}

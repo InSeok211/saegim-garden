@@ -1,0 +1,1684 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#146c94" />
+  <title>다대포 가요제 모바일 안내 · 목록 완전 숨김·메뉴 비가림</title>
+  <style>
+    :root{
+      --bg:#f7fbff;
+      --surface:#ffffff;
+      --surface-2:#edf6fd;
+      --text:#18384a;
+      --muted:#6e8796;
+      --line:#ddeaf3;
+      --primary:#146c94;
+      --primary-2:#3b97d3;
+      --accent:#6fc7f0;
+      --danger:#e96a5f;
+      --shadow:0 10px 30px rgba(20,108,148,.10);
+      --radius:22px;
+      --nav-h:88px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;color:var(--text);background:var(--bg)}
+    button,a,input{font:inherit}
+    button{border:0;cursor:pointer}
+    a{text-decoration:none;color:inherit}
+    .app{max-width:520px;margin:0 auto;min-height:100dvh;background:var(--bg);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px)}
+    .topbar{position:relative;top:auto;z-index:30;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;background:rgba(247,251,255,.92);border-bottom:1px solid rgba(221,234,243,.85)}
+    .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand-mark{width:30px;height:30px;display:grid;place-items:center;color:var(--primary);font-size:0;flex:0 0 30px}
+    .brand h1{font-size:17px;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:800}
+    .brand p{font-size:12px;color:var(--muted);margin:3px 0 0}
+    .notice-btn{width:34px;height:34px;border-radius:0;background:transparent;border:0;display:grid;place-items:center;position:relative;padding:0;color:var(--text)}
+    .notice-dot{position:absolute;right:3px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
+    .brand-mark svg{width:24px;height:24px;display:block}
+    .notice-btn svg{width:22px;height:22px;display:block;stroke:currentColor}
+
+    .content{padding:16px 16px 0}
+    .page{display:none;animation:fade .22s ease}
+    .page.active{display:block}
+    @keyframes fade{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .hero{background:linear-gradient(145deg,#146c94,#57a9e0);color:white;border-radius:28px;padding:22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.08)}
+    .hero:before{width:160px;height:160px;right:-60px;top:-70px}
+    .hero:after{width:100px;height:100px;right:45px;bottom:-60px}
+    .eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;opacity:.82}
+    .hero h2{font-size:27px;line-height:1.28;margin:8px 0 8px;letter-spacing:-.04em}
+    .hero p{font-size:14px;line-height:1.6;margin:0;color:rgba(255,255,255,.84)}
+    .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;position:relative;z-index:1}
+    .btn{min-height:48px;border-radius:15px;padding:0 16px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-light{background:white;color:var(--primary)}
+    .btn-ghost{background:rgba(255,255,255,.13);color:white;border:1px solid rgba(255,255,255,.2)}
+    .section{margin-top:22px}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 2px 12px}
+    .section-title h3{font-size:18px;margin:0;letter-spacing:-.03em}
+    .section-title button{background:none;color:var(--primary);font-weight:800;font-size:13px;padding:4px}
+    .live-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 6px 18px rgba(17,54,48,.06)}
+    .live-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .live-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:var(--danger)}
+    .pulse{width:9px;height:9px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 0 rgba(199,72,72,.5);animation:pulse 1.7s infinite}
+    @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(199,72,72,0)}100%{box-shadow:0 0 0 0 rgba(199,72,72,0)}}
+    .time-chip{font-size:12px;color:var(--muted);background:var(--surface-2);padding:6px 9px;border-radius:999px}
+    .live-card h4{font-size:20px;margin:0 0 6px}
+    .live-card p{font-size:13px;color:var(--muted);margin:0 0 16px}
+    .mini-actions{display:flex;gap:8px}
+    .mini-btn{flex:1;min-height:42px;border-radius:13px;background:var(--surface-2);color:var(--primary);font-weight:800}
+    .quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .quick-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:17px;text-align:left;min-height:124px;box-shadow:0 4px 14px rgba(17,54,48,.045)}
+    .quick-icon{width:42px;height:42px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;font-size:21px;margin-bottom:13px}
+    .quick-card strong{display:block;font-size:16px;margin-bottom:5px}
+    .quick-card span{font-size:12px;line-height:1.45;color:var(--muted)}
+    .notice-card{display:flex;gap:12px;background:#f1f8ff;border:1px solid #d4e8f7;border-radius:18px;padding:15px}
+    .notice-card b{font-size:14px}
+    .notice-card p{font-size:12px;color:#527188;line-height:1.5;margin:4px 0 0}
+
+    .home-alert{width:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:#f2f8fd;border:1px solid #d4e6f3;border-radius:17px;padding:13px 14px;margin-bottom:14px;text-align:left;color:var(--text)}
+    .home-alert .alert-badge{font-size:10px;font-weight:900;color:white;background:var(--primary);padding:5px 7px;border-radius:8px;white-space:nowrap}
+    .home-alert strong{font-size:13px;line-height:1.4}
+    .home-alert .alert-arrow{color:#6e8796;font-size:18px}
+    .event-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;position:relative;z-index:1}
+    .event-meta span{font-size:11px;font-weight:800;color:rgba(255,255,255,.9);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);padding:7px 9px;border-radius:999px}
+    .next-event{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .next-event small{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+    .next-event strong{font-size:13px;line-height:1.4}
+    .next-event button{flex:0 0 auto;background:var(--surface-2);color:var(--primary);font-size:12px;font-weight:900;padding:9px 11px;border-radius:11px}
+    .home-guide{display:grid;gap:9px}
+    .guide-row{display:flex;align-items:flex-start;gap:11px;background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:14px}
+    .guide-row .guide-icon{width:38px;height:38px;flex:0 0 38px;border-radius:13px;background:var(--surface-2);display:grid;place-items:center;font-size:18px}
+    .guide-row b{font-size:14px;display:block;margin-bottom:3px}
+    .guide-row p{font-size:12px;line-height:1.45;color:var(--muted);margin:0}
+    .page-head{margin:2px 2px 14px}
+    .page-head h2{font-size:25px;letter-spacing:-.04em;margin:0 0 6px}
+    .page-head p{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
+    .map-wrap{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:10px;box-shadow:var(--shadow)}
+    .map{height:380px;border-radius:18px;position:relative;overflow:hidden;background:
+      linear-gradient(35deg,transparent 47%,rgba(255,255,255,.85) 48% 52%,transparent 53%) 0 0/130px 90px,
+      linear-gradient(-35deg,transparent 47%,rgba(255,255,255,.8) 48% 52%,transparent 53%) 15px 20px/150px 105px,
+      #d8ecf8;
+    }
+    .map:before{content:"";position:absolute;left:-20px;right:-20px;bottom:-25px;height:110px;background:#91d0f2;border-radius:50% 50% 0 0/30% 30% 0 0;opacity:.85}
+    .map:after{content:"다대포 해변";position:absolute;left:20px;bottom:20px;font-size:12px;font-weight:800;color:#2f6f95}
+    .road{position:absolute;background:#f7f2e8;border:3px solid rgba(255,255,255,.65);border-radius:99px;transform-origin:center}
+    .road.r1{width:360px;height:28px;left:20px;top:145px;transform:rotate(-9deg)}
+    .road.r2{width:240px;height:24px;left:120px;top:230px;transform:rotate(18deg)}
+    .road.r3{width:210px;height:22px;left:40px;top:75px;transform:rotate(35deg)}
+    .map-label{position:absolute;font-size:11px;color:#60726d;background:rgba(255,255,255,.78);padding:4px 7px;border-radius:8px;font-weight:700}
+    .pin{position:absolute;width:42px;height:42px;border-radius:16px 16px 16px 4px;transform:rotate(-45deg);background:var(--primary);box-shadow:0 8px 18px rgba(20,108,148,.26);display:grid;place-items:center;border:3px solid white}
+    .pin span{transform:rotate(45deg);font-size:18px}
+    .pin.active{background:var(--accent);transform:rotate(-45deg) scale(1.12)}
+    .map-tools{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+    .map-tool{width:42px;height:42px;border-radius:14px;background:white;box-shadow:0 6px 16px rgba(40,102,140,.12);display:grid;place-items:center;font-size:18px}
+    .filters{display:flex;gap:8px;overflow-x:auto;padding:14px 1px 4px;scrollbar-width:none}
+    .filters::-webkit-scrollbar{display:none}
+    .filter{white-space:nowrap;padding:10px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:800;color:var(--muted)}
+    .filter.active{background:var(--primary);color:white;border-color:var(--primary)}
+    .place-list{display:grid;gap:11px;margin-top:12px}
+    .place-card{background:var(--surface);border:1px solid var(--line);border-radius:19px;padding:14px;display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;text-align:left}
+    .place-thumb{width:64px;height:64px;border-radius:17px;background:linear-gradient(145deg,#dbece6,#f2eadb);display:grid;place-items:center;font-size:26px}
+    .place-card h4{font-size:15px;margin:0 0 5px}
+    .place-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.4}
+    .place-tag{display:inline-flex;margin-top:6px;font-size:10px;font-weight:900;color:var(--primary);background:var(--surface-2);padding:4px 7px;border-radius:8px}
+    .chev{color:#9aa6a2;font-size:20px}
+    .schedule-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#e7efeb;padding:5px;border-radius:16px;margin-bottom:14px}
+    .schedule-tab{min-height:40px;border-radius:12px;background:transparent;font-weight:800;color:var(--muted);font-size:13px}
+    .schedule-tab.active{background:white;color:var(--primary);box-shadow:0 3px 9px rgba(17,54,48,.08)}
+    .schedule-list{display:grid;gap:11px}
+    .schedule-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;grid-template-columns:74px 1fr;gap:14px;position:relative}
+    .schedule-card.now{border-color:#f1c266;background:#fffbf3}
+    .time-box{padding-right:13px;border-right:1px solid var(--line)}
+    .time-box strong{font-size:15px;display:block}
+    .time-box span{font-size:11px;color:var(--muted)}
+    .schedule-card h4{font-size:16px;margin:0 0 6px}
+    .schedule-card p{font-size:12px;color:var(--muted);margin:0 0 10px}
+    .schedule-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .location{font-size:11px;color:var(--primary);font-weight:800}
+    .status-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#ffe9be;color:#8a5a00}
+    .contact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+    .contact-card{background:var(--surface);border:1px solid var(--line);border-radius:19px;padding:17px;text-align:left;min-height:116px}
+    .contact-card .quick-icon{margin-bottom:11px}
+    .contact-card strong{font-size:15px;display:block;margin-bottom:4px}
+    .contact-card span{font-size:12px;color:var(--muted);line-height:1.45}
+    .faq-list{display:grid;gap:9px}
+    details{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:0 15px}
+    summary{list-style:none;cursor:pointer;padding:16px 24px 16px 0;font-size:14px;font-weight:800;position:relative}
+    summary::-webkit-details-marker{display:none}
+    summary:after{content:"＋";position:absolute;right:0;color:var(--primary)}
+    details[open] summary:after{content:"－"}
+    details p{font-size:13px;line-height:1.65;color:var(--muted);padding:0 0 16px;margin:0}
+    .home-stamp-card{width:100%;background:linear-gradient(145deg,#ffffff,#f1f8ff);border:1px solid #d7e8f4;border-radius:21px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 5px 16px rgba(20,108,148,.06);text-align:left}
+    .home-stamp-card small{display:block;font-size:11px;color:#53778d;margin-bottom:5px;font-weight:800}
+    .home-stamp-card strong{font-size:18px;display:block;margin-bottom:5px;color:var(--text)}
+    .home-stamp-card p{font-size:12px;color:var(--muted);margin:0}
+    .home-stamp-card .arrow{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--primary);font-size:18px;font-weight:900}
+    .participant-summary{background:linear-gradient(145deg,#146c94,#3b97d3);color:#fff;border-radius:25px;padding:19px;box-shadow:var(--shadow)}
+    .participant-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .participant-top small{font-size:11px;opacity:.75;display:block;margin-bottom:4px}
+    .participant-top h3{font-size:22px;margin:0;letter-spacing:.03em}
+    .reward-chip{font-size:11px;font-weight:900;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);padding:7px 9px;border-radius:999px;white-space:nowrap}
+    .stamp-board{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:17px}
+    .stamp-slot{aspect-ratio:1;border:2px dashed rgba(255,255,255,.32);border-radius:15px;display:grid;place-items:center;text-align:center;padding:4px;font-size:9px;color:rgba(255,255,255,.72);overflow:hidden}
+    .stamp-slot.done{background:#e9f7ff;border:2px solid #8fd2f3;color:#165c7a;transform:rotate(-2deg)}
+    .stamp-slot .stamp-emoji{font-size:23px;display:block;margin-bottom:2px}
+    .stamp-progress{height:9px;background:rgba(255,255,255,.16);border-radius:999px;overflow:hidden;margin-top:15px}
+    .stamp-progress span{display:block;height:100%;background:linear-gradient(90deg,#8fd2f3,#3b97d3);width:0;transition:.3s}
+    .stamp-progress-text{font-size:11px;text-align:right;color:rgba(255,255,255,.78);margin-top:6px}
+    .stamp-main-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+    .stamp-main-actions .btn{background:var(--surface-2);color:var(--primary)}
+    .stamp-main-actions .btn.primary{background:var(--primary);color:#fff}
+    .scanner-workspace{display:none;margin-top:14px}
+    .scanner-workspace.open{display:block}
+    .stamp-history{display:grid;gap:9px}
+    .stamp-history-row{background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:13px 14px;display:flex;align-items:center;gap:11px}
+    .stamp-history-row .mark{width:39px;height:39px;border-radius:13px;background:#e9f7ff;display:grid;place-items:center;font-size:20px}
+    .stamp-history-row b{font-size:14px;display:block;margin-bottom:3px}
+    .stamp-history-row span{font-size:11px;color:var(--muted)}
+    .stamp-empty{background:var(--surface);border:1px dashed #cad5d0;border-radius:17px;padding:18px;text-align:center;color:var(--muted);font-size:12px;line-height:1.55}
+    .stamp-state{display:inline-flex;margin-left:5px;font-size:10px;font-weight:900;padding:4px 7px;border-radius:8px}
+    .stamp-state.done{background:#e9f7ff;color:#165c7a}
+    .stamp-state.todo{background:#e9f4ef;color:var(--primary)}
+    .personal-qr-visual{width:210px;height:210px;margin:12px auto;background:repeating-conic-gradient(#17211f 0 25%,#fff 0 50%) 0 0/22px 22px;border:12px solid #fff;box-shadow:0 0 0 1px var(--line);border-radius:8px;position:relative}
+    .personal-qr-visual:before,.personal-qr-visual:after{content:"";position:absolute;width:54px;height:54px;background:#fff;border:10px solid #17211f;box-shadow:inset 0 0 0 8px #fff}
+    .personal-qr-visual:before{left:9px;top:9px}.personal-qr-visual:after{right:9px;top:9px}
+    .personal-qr-third{position:absolute;width:54px;height:54px;background:#fff;border:10px solid #17211f;box-shadow:inset 0 0 0 8px #fff;left:9px;bottom:9px}
+    /* 선택한 메뉴의 원형 아이콘이 위로 솟아오르는 이동형 하단 메뉴 */
+    .bottom-nav{
+      position:fixed;z-index:40;left:50%;bottom:14px;transform:translateX(-50%);
+      width:min(496px,calc(100% - 28px));height:62px;
+      padding:0 10px calc(env(safe-area-inset-bottom) * .25);
+      background:linear-gradient(145deg,#0f5c82,var(--primary));
+      border:1px solid rgba(255,255,255,.12);border-radius:20px;
+      box-shadow:0 16px 34px rgba(20,108,148,.24);
+      display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
+      overflow:visible;
+    }
+    .nav-item{
+      min-width:0;height:62px;padding:0;background:transparent;border-radius:18px;
+      color:rgba(255,255,255,.63);display:grid;place-items:center;
+      position:relative;overflow:visible;
+      transition:color .24s ease,transform .24s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .nav-icon{
+      width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+      color:currentColor;position:relative;z-index:2;
+      transition:transform .34s cubic-bezier(.22,1,.36,1),background .26s ease,
+                 color .26s ease,box-shadow .26s ease,border-color .26s ease;
+    }
+    .nav-icon svg{
+      width:20px;height:20px;display:block;fill:none;stroke:currentColor;
+      stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+    }
+    .nav-label{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+    .nav-item.active{color:#fff}
+    .nav-item.active .nav-icon{
+      width:50px;height:50px;
+      transform:translateY(-25px) scale(1.03);
+      background:linear-gradient(145deg,#7ed3f6,var(--primary-2));
+      color:#fff;border:4px solid var(--bg);
+      box-shadow:0 10px 22px rgba(20,108,148,.20),0 4px 10px rgba(59,151,211,.24);
+    }
+    .nav-item.active::after{
+      content:"";position:absolute;left:50%;bottom:7px;transform:translateX(-50%);
+      width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.92);
+      box-shadow:0 0 0 3px rgba(255,255,255,.10);
+    }
+    .nav-item:active .nav-icon{transform:scale(.90)}
+    .nav-item.active:active .nav-icon{transform:translateY(-23px) scale(.95)}
+    .nav-item.scan-nav{color:rgba(255,255,255,.63);padding:0}
+    .nav-item.scan-nav .nav-icon,
+    .nav-item.scan-nav.active .nav-icon{
+      margin:0;border-radius:50%;
+    }
+    .scan-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:14px;box-shadow:var(--shadow)}
+    .scanner-view{position:relative;height:330px;border-radius:19px;overflow:hidden;background:#17211f;display:grid;place-items:center}
+    .scanner-view video{width:100%;height:100%;object-fit:cover;display:none}
+    .scanner-placeholder{text-align:center;color:white;padding:24px}
+    .scanner-placeholder .camera-icon{width:72px;height:72px;margin:0 auto 15px;border-radius:24px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:34px}
+    .scanner-placeholder strong{display:block;font-size:18px;margin-bottom:7px}
+    .scanner-placeholder p{font-size:12px;line-height:1.55;color:rgba(255,255,255,.68);margin:0}
+    .scan-frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:210px;height:210px;border:3px solid rgba(255,255,255,.9);border-radius:24px;display:none;pointer-events:none;box-shadow:0 0 0 999px rgba(0,0,0,.24)}
+    .scan-frame:before,.scan-frame:after{content:"";position:absolute;width:38px;height:38px;border-color:var(--accent)}
+    .scan-frame:before{left:-3px;top:-3px;border-left:6px solid var(--accent);border-top:6px solid var(--accent);border-radius:18px 0 0 0}
+    .scan-frame:after{right:-3px;bottom:-3px;border-right:6px solid var(--accent);border-bottom:6px solid var(--accent);border-radius:0 0 18px 0}
+    .scan-status{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin:12px 4px 0}
+    .scan-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+    .scan-actions .btn{background:var(--surface-2);color:var(--primary)}
+    .scan-actions .btn.primary{background:var(--primary);color:white}
+    .upload-btn{position:relative;overflow:hidden}
+    .upload-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+    .manual-scan{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px}
+    .manual-scan h3{font-size:16px;margin:0 0 6px}
+    .manual-scan p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+    .manual-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+    .manual-row input{min-width:0;height:46px;border:1px solid var(--line);border-radius:13px;padding:0 13px;background:#fbfcfb;outline:none}
+    .manual-row input:focus{border-color:var(--primary)}
+    .manual-row button{padding:0 15px;border-radius:13px;background:var(--primary);color:white;font-weight:900}
+    .qr-result{display:none;margin-top:14px;background:#eef8f4;border:1px solid #cbe5da;border-radius:19px;padding:15px}
+    .qr-result.show{display:block}
+    .qr-result small{display:block;color:var(--muted);margin-bottom:5px}
+    .qr-result strong{font-size:14px;line-height:1.45;word-break:break-all}
+    .qr-result-actions{display:flex;gap:8px;margin-top:12px}
+    .qr-result-actions button{flex:1;min-height:40px;border-radius:12px;font-weight:900;background:white;color:var(--primary);border:1px solid #cbe5da}
+    .sheet-backdrop{position:fixed;z-index:80;inset:0;background:rgba(8,27,24,.45);opacity:0;pointer-events:none;transition:.2s}
+    .sheet{position:fixed;z-index:90;left:50%;bottom:0;transform:translate(-50%,105%);width:min(520px,100%);max-height:82dvh;background:white;border-radius:28px 28px 0 0;padding:12px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -20px 50px rgba(0,0,0,.17);transition:.28s cubic-bezier(.2,.8,.2,1);overflow:auto}
+    .sheet.open{transform:translate(-50%,0)}
+    .sheet-backdrop.open{opacity:1;pointer-events:auto}
+    .grab{width:44px;height:5px;background:#d8dfdc;border-radius:99px;margin:0 auto 15px}
+    .sheet-hero{height:150px;border-radius:21px;background:linear-gradient(145deg,#d8ebe5,#f7e9d5);display:grid;place-items:center;font-size:58px;margin-bottom:16px}
+    .sheet h3{font-size:22px;margin:0 0 5px}
+    .sheet .sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+    .info-row{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+    .info-row b{min-width:76px;font-size:13px}
+    .info-row span{font-size:13px;line-height:1.5;color:var(--muted)}
+    .sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+    .sheet-actions .btn{background:var(--surface-2);color:var(--primary)}
+    .sheet-actions .btn.primary{background:var(--primary);color:white}
+    .toast{position:fixed;z-index:120;left:50%;bottom:calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#17211f;color:white;padding:12px 16px;border-radius:13px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    @media (min-width:521px){body{padding:18px}.app{border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(21,63,56,.16);min-height:calc(100dvh - 36px)}.bottom-nav{bottom:30px}.sheet{bottom:18px;border-radius:28px}}
+  
+
+    /* 9차 UI/UX 기준: 가독성 · 접근성 · 사용성 */
+    :root{
+      --space-1:4px;
+      --space-2:8px;
+      --space-3:12px;
+      --space-4:16px;
+      --space-5:20px;
+      --space-6:24px;
+      --space-8:32px;
+      --radius-sm:12px;
+      --radius-md:18px;
+      --radius-lg:24px;
+      --touch:48px;
+      --nav-h:82px;
+    }
+    body{font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+    button,a,input,label,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid rgba(59,151,211,.35);outline-offset:3px}
+    .app{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 22px)}
+    .topbar{padding:calc(12px + env(safe-area-inset-top)) 20px 12px}
+    .brand-mark{width:36px;height:36px;flex-basis:36px}
+    .brand-mark svg{width:26px;height:26px}
+    .brand h1{font-size:18px}
+    .brand p{font-size:12px;line-height:1.4}
+    .notice-btn{width:48px;height:48px;border-radius:50%}
+    .notice-btn svg{width:23px;height:23px}
+    .content{padding:20px 20px 0}
+    .section{margin-top:32px}
+    .section-title{margin:0 0 14px;align-items:center}
+    .section-title h3{font-size:19px;line-height:1.3}
+    .section-title button{min-height:44px;padding:8px 4px;font-size:13px}
+    .hero{padding:24px;border-radius:24px;box-shadow:none}
+    .eyebrow{font-size:12px;letter-spacing:.06em}
+    .hero h2{font-size:28px;line-height:1.25;margin:10px 0}
+    .hero p{font-size:15px;line-height:1.65;color:rgba(255,255,255,.92)}
+    .event-meta{gap:8px;margin-top:18px}
+    .event-meta span{font-size:12px;line-height:1.2;padding:8px 10px}
+    .home-alert{min-height:52px;padding:12px 14px;border-radius:16px;margin-bottom:16px}
+    .home-alert .alert-badge{font-size:11px;padding:5px 8px}
+    .home-alert strong{font-size:13px;line-height:1.45}
+    .live-card,.home-stamp-card,.quick-card,.guide-row,.place-card,.schedule-card,.contact-card,details,.notice-card{border-radius:18px;box-shadow:none}
+    .live-card{padding:20px}
+    .live-card h4{font-size:20px;line-height:1.35}
+    .live-card p{font-size:14px;line-height:1.55}
+    .mini-actions{display:block}
+    .mini-btn{width:100%;min-height:48px;font-size:14px}
+    .mini-btn.primary-action{background:var(--primary);color:#fff}
+    .next-event{margin-top:16px;padding-top:16px}
+    .next-event small{font-size:12px}
+    .next-event strong{font-size:14px}
+    .next-event button{min-height:44px;padding:10px 13px}
+    .home-stamp-card{min-height:104px;padding:18px;width:100%}
+    .home-stamp-card small{font-size:12px;line-height:1.4}
+    .home-stamp-card strong{font-size:21px;line-height:1.35;margin:4px 0}
+    .home-stamp-card p{font-size:13px;line-height:1.5}
+    .home-stamp-card .arrow{width:44px;height:44px;flex-basis:44px;font-size:24px}
+    .quick-grid.priority-grid{grid-template-columns:1fr;gap:12px}
+    .quick-card.priority-card{min-height:88px;padding:16px;display:grid;grid-template-columns:48px 1fr 28px;align-items:center;gap:14px;text-align:left}
+    .quick-icon{width:48px;height:48px;border-radius:14px;margin:0;color:var(--primary)}
+    .quick-icon svg,.guide-icon svg,.notice-symbol svg,.stamp-main-actions svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .quick-copy{min-width:0}
+    .quick-card strong{font-size:16px;line-height:1.35;margin:0 0 4px}
+    .quick-card span{font-size:13px;line-height:1.45}
+    .card-arrow{font-style:normal;color:var(--muted);font-size:24px;text-align:center}
+    .home-guide{gap:12px}
+    .guide-row{padding:16px;gap:14px}
+    .guide-row .guide-icon{width:44px;height:44px;flex-basis:44px;border-radius:14px;color:var(--primary)}
+    .guide-row b{font-size:15px;line-height:1.35;margin-bottom:5px}
+    .guide-row p{font-size:13px;line-height:1.55}
+    .page-head{margin:2px 0 20px}
+    .page-head h2{font-size:28px;line-height:1.25;margin-bottom:8px}
+    .page-head p{font-size:14px;line-height:1.6}
+    .btn{min-height:48px;border-radius:14px;font-size:14px}
+    .btn.primary{background:var(--primary);color:#fff}
+    .btn.secondary{background:var(--surface-2);color:var(--primary);border:1px solid var(--line)}
+    .stamp-main-actions{grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+    .stamp-main-actions .scan-primary{grid-column:1/-1;display:flex}
+    .stamp-main-actions .text-action{grid-column:1/-1;min-height:44px;background:transparent;color:var(--primary);font-size:13px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+    .stamp-main-actions svg{width:22px;height:22px}
+    .participant-summary{padding:20px;border-radius:22px}
+    .participant-top small{font-size:12px}
+    .participant-top h3{font-size:23px}
+    .stamp-slot{min-width:0;border-radius:14px;font-size:10px}
+    .stamp-progress-text{font-size:12px}
+    .scanner-workspace,.scan-card,.manual-scan{border-radius:18px}
+    .scan-status,.manual-scan p{font-size:13px;line-height:1.55}
+    .manual-row input,.manual-row button{min-height:48px;font-size:14px}
+    .filters{gap:10px;padding-top:16px}
+    .filter{min-height:44px;padding:10px 16px;font-size:13px}
+    .place-list{gap:12px;margin-top:16px}
+    .place-card{min-height:92px;padding:14px}
+    .place-card h4{font-size:16px}
+    .place-card p,.place-card small{font-size:12px;line-height:1.45}
+    .schedule-tabs{min-height:48px}
+    .schedule-tab{min-height:46px;font-size:13px}
+    .schedule-list{gap:12px}
+    .schedule-card{padding:18px}
+    .schedule-card h4{font-size:16px;line-height:1.4}
+    .schedule-card p{font-size:13px;line-height:1.5}
+    .contact-grid{grid-template-columns:1fr;gap:12px}
+    .contact-card{min-height:92px;padding:16px;display:grid;grid-template-columns:48px 1fr;grid-template-rows:auto auto;column-gap:14px;text-align:left}
+    .contact-card .quick-icon{grid-row:1/3}
+    .contact-card strong{font-size:16px;align-self:end}
+    .contact-card>span:last-child{font-size:13px;line-height:1.45;align-self:start}
+    .danger-icon{color:var(--danger);background:#fff2f0}
+    details{padding:0 16px}
+    summary{min-height:52px;padding:16px 30px 16px 0;font-size:14px;display:flex;align-items:center}
+    details p{font-size:13px;line-height:1.65}
+    .notice-card{padding:16px;align-items:flex-start}
+    .notice-symbol{width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:var(--surface-2);display:grid;place-items:center;color:var(--primary)}
+    .notice-card b{font-size:15px}
+    .notice-card p{font-size:13px;line-height:1.55}
+
+    .bottom-nav{height:76px;bottom:12px;padding:0 8px calc(env(safe-area-inset-bottom) * .15);border-radius:22px}
+    .nav-item{height:76px;display:flex;flex-direction:column;justify-content:center;gap:3px;padding-top:8px;color:rgba(255,255,255,.78)}
+    .nav-icon{width:36px;height:36px;flex:0 0 36px}
+    .nav-icon svg{width:21px;height:21px}
+    .nav-label{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:nowrap;border:0;font-size:11px;line-height:1.2;font-weight:700;color:currentColor}
+    .nav-item.active .nav-icon{width:46px;height:46px;flex-basis:46px;transform:translateY(-12px);background:linear-gradient(145deg,#7ed3f6,var(--primary-2));border:3px solid var(--bg);box-shadow:0 8px 18px rgba(20,108,148,.22)}
+    .nav-item.active .nav-label{transform:translateY(-11px);font-weight:900;color:#fff}
+    .nav-item.active::after{display:none}
+    .nav-item:active .nav-icon{transform:scale(.94)}
+    .nav-item.active:active .nav-icon{transform:translateY(-10px) scale(.95)}
+    @media (max-width:360px){
+      .content{padding-left:16px;padding-right:16px}
+      .nav-label{font-size:10px}
+      .hero h2{font-size:25px}
+      .event-meta span{font-size:11px}
+    }
+
+
+
+
+    /* 12차: 사용자 지도 UI 전면 개선 */
+    body.map-mode{overflow:hidden}
+    body.map-mode .app{padding-bottom:0;overflow:hidden}
+    body.map-mode .topbar{
+      min-height:64px;padding:calc(8px + env(safe-area-inset-top)) 18px 8px;
+      background:rgba(247,251,255,.96);box-shadow:0 1px 0 rgba(210,229,241,.9)
+    }
+    body.map-mode .brand p{display:none}
+    body.map-mode .brand-mark{width:32px;height:32px;flex-basis:32px}
+    body.map-mode .brand-mark svg{width:23px;height:23px}
+    body.map-mode .brand h1{font-size:17px}
+    body.map-mode .notice-btn{display:none}
+    body.map-mode .content{padding:0}
+    body.map-mode #map{height:calc(100dvh - 64px - env(safe-area-inset-top));min-height:520px;overflow:hidden}
+
+    .map-page-shell{position:relative;width:100%;height:100%;background:#dbeaf4;overflow:hidden}
+    .map-page-shell .map-wrap{position:absolute;inset:0;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent}
+    .map-page-shell .map{height:100%;min-height:100%;border-radius:0;background:
+      radial-gradient(circle at 20% 34%,rgba(185,232,204,.92) 0 9%,transparent 9.5%),
+      radial-gradient(circle at 82% 70%,rgba(187,233,211,.82) 0 10%,transparent 10.5%),
+      linear-gradient(35deg,transparent 47%,rgba(255,255,255,.86) 48% 52%,transparent 53%) 0 0/135px 96px,
+      linear-gradient(-35deg,transparent 47%,rgba(255,255,255,.78) 48% 52%,transparent 53%) 15px 20px/160px 112px,
+      #dbe8ef;
+    }
+    .map-page-shell .map:before{bottom:-38px;height:150px;background:#8fd0ef;opacity:.9}
+    .map-page-shell .map:after{left:18px;bottom:112px;font-size:12px;color:#2e7398;background:rgba(255,255,255,.78);padding:5px 9px;border-radius:999px}
+    .map-page-shell .road{box-shadow:0 0 0 1px rgba(155,177,189,.12)}
+    .map-page-shell .map-label{font-size:10px;background:rgba(255,255,255,.82);box-shadow:0 2px 8px rgba(31,73,97,.08)}
+    .map-page-shell .pin{width:40px;height:40px;border-width:3px;box-shadow:0 7px 16px rgba(20,108,148,.23);transition:transform .2s ease,opacity .2s ease,filter .2s ease}
+    .map-page-shell .pin span{font-size:17px}
+    .map-page-shell .pin.active{background:#176eec;transform:rotate(-45deg) scale(1.18);z-index:8}
+    .map-page-shell .pin.is-muted{opacity:.2;filter:grayscale(1);pointer-events:none}
+
+    .map-ui-top{position:absolute;z-index:12;left:14px;right:14px;top:12px;display:grid;gap:10px;pointer-events:none}
+    .map-search{
+      height:54px;border-radius:18px;background:rgba(255,255,255,.97);border:1px solid rgba(214,230,240,.95);
+      box-shadow:0 9px 24px rgba(27,75,103,.14);display:grid;grid-template-columns:42px 1fr 42px;align-items:center;padding:0 5px;pointer-events:auto
+    }
+    .map-search-icon,.map-search-clear{width:42px;height:42px;border-radius:13px;background:transparent;color:var(--primary);display:grid;place-items:center}
+    .map-search-icon svg,.map-search-clear svg,.map-float-btn svg,.map-list-trigger svg,.map-preview-actions svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .map-search input{height:48px;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;font-weight:750;min-width:0}
+    .map-search input::placeholder{color:#8097a6;font-weight:650}
+    .map-search-clear{color:#78909f;visibility:hidden}
+    .map-search-clear.show{visibility:visible}
+
+    .map-filter-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 1px 2px;pointer-events:auto}
+    .map-filter-strip::-webkit-scrollbar{display:none}
+    .map-filter-strip .filter{min-height:42px;padding:0 15px;background:rgba(255,255,255,.96);border-color:rgba(211,227,238,.98);box-shadow:0 5px 14px rgba(27,75,103,.09);font-size:13px;color:#587285}
+    .map-filter-strip .filter.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+    .map-list-trigger{position:absolute;z-index:11;right:14px;top:126px;min-height:44px;border-radius:15px;background:rgba(255,255,255,.97);border:1px solid var(--line);box-shadow:0 7px 18px rgba(25,73,100,.13);display:flex;align-items:center;gap:7px;padding:0 13px;color:var(--text);font-size:13px;font-weight:900}
+    .map-list-trigger b{display:grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--surface-2);color:var(--primary);font-size:11px}
+
+    .map-floating-tools{position:absolute;z-index:11;right:14px;bottom:calc(var(--nav-h) + 116px + env(safe-area-inset-bottom));display:grid;gap:9px}
+    .map-float-btn{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.97);border:1px solid var(--line);box-shadow:0 7px 18px rgba(25,73,100,.14);color:var(--primary);display:grid;place-items:center}
+    .map-float-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+    .map-status-pill{position:absolute;z-index:10;left:14px;top:128px;min-height:34px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.92);border:1px solid rgba(211,227,238,.95);display:flex;align-items:center;gap:7px;color:#587285;font-size:11px;font-weight:800;box-shadow:0 5px 14px rgba(27,75,103,.08)}
+    .map-status-pill i{width:8px;height:8px;border-radius:50%;background:#2e9f73;box-shadow:0 0 0 4px rgba(46,159,115,.12)}
+
+    .map-place-preview{position:absolute;z-index:13;left:14px;right:14px;bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 34px rgba(25,73,100,.18);padding:14px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;animation:mapPreviewIn .2s ease}
+    .map-place-preview[hidden]{display:none}
+    @keyframes mapPreviewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .map-preview-icon{width:48px;height:48px;border-radius:15px;background:var(--surface-2);display:grid;place-items:center;font-size:23px}
+    .map-preview-copy{min-width:0}
+    .map-preview-copy strong{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .map-preview-copy span{display:block;font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .map-preview-state{display:inline-flex!important;width:max-content;margin-top:6px!important;padding:4px 7px;border-radius:8px;background:var(--surface-2);color:var(--primary)!important;font-weight:900!important;font-size:10px!important}
+    .map-preview-actions{display:flex;gap:7px}
+    .map-preview-actions button{width:42px;height:42px;border-radius:13px;background:var(--surface-2);color:var(--primary);display:grid;place-items:center}
+    .map-preview-actions button.primary{background:var(--primary);color:#fff}
+
+    .map-list-backdrop{position:fixed;z-index:47;inset:0;background:rgba(12,34,47,.34);opacity:0;pointer-events:none;transition:.2s}
+    .map-list-backdrop.open{opacity:1;pointer-events:auto}
+    .map-list-panel{position:fixed;z-index:48;left:50%;bottom:calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));transform:translate(-50%,110%);width:min(500px,calc(100% - 20px));max-height:min(62dvh,600px);background:#f8fbfd;border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 50px rgba(12,42,59,.24);transition:.28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;overflow:hidden}
+    .map-list-panel.open{transform:translate(-50%,0)}
+    .map-list-head{min-height:64px;padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff}
+    .map-list-head strong{font-size:17px;display:block}.map-list-head span{font-size:11px;color:var(--muted)}
+    .map-list-close{width:42px;height:42px;border-radius:14px;background:var(--surface-2);color:var(--text);font-size:22px}
+    .map-list-scroll{overflow:auto;padding:12px 12px 18px}
+    .map-list-scroll .place-list{margin:0;gap:10px}
+    .map-list-scroll .place-card{min-height:82px;background:#fff;padding:12px;grid-template-columns:52px 1fr auto;border-radius:16px}
+    .map-list-scroll .place-thumb{width:52px;height:52px;border-radius:14px;font-size:22px}
+    .map-list-empty{padding:40px 18px;text-align:center;color:var(--muted);font-size:13px}
+
+    @media(min-width:521px){
+      body.map-mode{padding:18px}
+      body.map-mode #map{height:calc(100dvh - 100px);border-radius:0 0 28px 28px}
+      .map-page-shell{border-radius:0 0 28px 28px}
+      .map-list-panel{bottom:30px}
+    }
+    @media(max-width:360px){
+      .map-ui-top{left:10px;right:10px}.map-list-trigger{right:10px}.map-status-pill{left:10px}
+      .map-place-preview{left:10px;right:10px;padding:11px;grid-template-columns:44px minmax(0,1fr) auto}
+      .map-preview-icon{width:44px;height:44px}.map-preview-actions button{width:38px;height:38px}
+    }
+
+    /* 10차: 자유 선택형 실증 진입 흐름 */
+    [hidden]{display:none!important}
+    .entry-shell{max-width:520px;margin:0 auto;min-height:100dvh;background:linear-gradient(180deg,#f7fbff 0%,#edf7ff 100%);color:var(--text);display:flex;flex-direction:column}
+    .entry-head{padding:calc(14px + env(safe-area-inset-top)) 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .entry-brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+    .entry-brand .wave-mark{width:38px;height:38px;border-radius:14px;background:linear-gradient(145deg,#146c94,#57a9e0);display:grid;place-items:center;color:#fff;box-shadow:0 8px 20px rgba(20,108,148,.18)}
+    .entry-back{width:48px;height:48px;border-radius:50%;background:transparent;color:var(--text);display:grid;place-items:center;font-size:25px}
+    .entry-back[hidden]{display:none!important}
+    .entry-main{flex:1;padding:12px 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+    .entry-step{display:none;animation:entryFade .22s ease}
+    .entry-step.active{display:block}
+    @keyframes entryFade{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .entry-progress{display:flex;gap:7px;margin:4px 0 24px}
+    .entry-progress i{width:28px;height:5px;border-radius:999px;background:#d6e7f2}
+    .entry-progress i.on{background:var(--primary)}
+    .entry-kicker{display:inline-flex;align-items:center;min-height:30px;padding:6px 10px;border-radius:999px;background:#eaf5fc;color:var(--primary);font-size:12px;font-weight:900;margin-bottom:14px}
+    .entry-title{font-size:30px;line-height:1.25;letter-spacing:-.045em;margin:0 0 10px}
+    .entry-desc{font-size:15px;line-height:1.65;color:var(--muted);margin:0 0 24px}
+    .method-list{display:grid;gap:14px}
+    .method-card{width:100%;min-height:148px;padding:20px;border-radius:22px;background:#fff;border:1px solid var(--line);text-align:left;display:grid;grid-template-columns:54px 1fr 26px;gap:15px;align-items:start;box-shadow:none;color:var(--text)}
+    .method-card:active{transform:scale(.99)}
+    .method-icon{width:54px;height:54px;border-radius:18px;background:var(--surface-2);color:var(--primary);display:grid;place-items:center}
+    .method-icon svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .method-copy strong{display:block;font-size:18px;line-height:1.35;margin-bottom:6px}
+    .method-copy p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 11px}
+    .method-tags{display:flex;flex-wrap:wrap;gap:6px}
+    .method-tags span{font-size:11px;font-weight:800;padding:6px 8px;border-radius:999px;background:#f2f7fa;color:#547286}
+    .method-arrow{font-size:25px;color:#8ba2b1;padding-top:12px}
+    .entry-note{margin-top:18px;padding:14px 15px;border-radius:16px;background:#edf7fd;color:#527188;font-size:12px;line-height:1.55}
+    .qr-guide-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px}
+    .demo-card-visual{height:150px;border-radius:20px;background:linear-gradient(145deg,#146c94,#58ade2);color:#fff;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:18px;overflow:hidden;position:relative}
+    .demo-card-visual:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-65px;top:-60px;background:rgba(255,255,255,.1)}
+    .demo-card-copy{position:relative;z-index:1}.demo-card-copy small{font-size:11px;opacity:.82}.demo-card-copy strong{display:block;font-size:21px;margin:7px 0 4px}.demo-card-copy span{font-size:12px;opacity:.82}
+    .mini-qr{width:92px;height:92px;flex:0 0 92px;border:9px solid #fff;border-radius:8px;background:repeating-conic-gradient(#18384a 0 25%,#fff 0 50%) 0 0/16px 16px;position:relative;z-index:1}
+    .guide-steps{display:grid;gap:12px;margin-top:18px}
+    .guide-step{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+    .guide-step b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--primary);font-size:13px}
+    .guide-step strong{display:block;font-size:14px;margin:1px 0 3px}.guide-step p{font-size:12px;line-height:1.5;color:var(--muted);margin:0}
+    .entry-form{display:grid;gap:14px;margin-top:20px}
+    .field-label{display:grid;gap:7px;font-size:13px;font-weight:800}
+    .field-input{width:100%;height:52px;border:1px solid var(--line);border-radius:15px;background:#fff;padding:0 14px;color:var(--text);outline:none}
+    .field-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,151,211,.13)}
+    .entry-primary,.entry-secondary,.social-btn{width:100%;min-height:52px;border-radius:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px}
+    .entry-primary{background:var(--primary);color:#fff}
+    .entry-secondary{background:#fff;color:var(--primary);border:1px solid var(--line)}
+    .entry-link{min-height:44px;background:transparent;color:var(--primary);font-size:13px;font-weight:900;text-decoration:underline;text-underline-offset:3px}
+    .social-list{display:grid;gap:12px}
+    .social-btn.kakao{background:#fee500;color:#191919}
+    .social-btn.google{background:#fff;color:#243746;border:1px solid var(--line)}
+    .social-btn.id{background:#edf6fd;color:var(--primary);border:1px solid #cfe4f2}
+    .social-symbol{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:1000;background:rgba(255,255,255,.72)}
+    .social-btn.google .social-symbol{color:#4285f4;border:1px solid #e0e6ea}
+    .or-divider{display:flex;align-items:center;gap:12px;color:#8ca0ad;font-size:12px;margin:18px 0}.or-divider:before,.or-divider:after{content:"";height:1px;flex:1;background:var(--line)}
+    .auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:#eaf3f9;border-radius:15px;margin-bottom:18px}
+    .auth-tab{min-height:44px;border-radius:11px;background:transparent;color:var(--muted);font-weight:900}
+    .auth-tab.active{background:#fff;color:var(--primary);box-shadow:0 3px 10px rgba(20,108,148,.08)}
+    .auth-panel{display:none}.auth-panel.active{display:block}
+    .password-wrap{position:relative}.password-wrap .field-input{padding-right:58px}.pw-toggle{position:absolute;right:7px;top:7px;min-width:46px;height:38px;border-radius:10px;background:var(--surface-2);color:var(--primary);font-size:12px;font-weight:900}
+    .consent-row{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.55;color:var(--muted)}.consent-row input{width:20px;height:20px;margin-top:1px;accent-color:var(--primary)}
+    .field-help{font-size:11px;line-height:1.45;color:var(--muted);font-weight:500}.field-error{min-height:18px;font-size:12px;color:var(--danger);font-weight:700}
+    .prototype-hint{font-size:11px;line-height:1.45;color:#7890a0;text-align:center;margin-top:14px}
+    .entry-footer{padding-top:22px;text-align:center;font-size:11px;color:#8296a4}
+    .test-reset-card{margin-top:22px;padding:17px;border:1px dashed #b9d6e8;border-radius:18px;background:#f4faff}
+    .test-reset-card small{display:inline-flex;margin-bottom:8px;padding:5px 8px;border-radius:999px;background:#e4f2fb;color:var(--primary);font-size:10px;font-weight:900}
+    .test-reset-card strong{display:block;font-size:15px;margin-bottom:5px}
+    .test-reset-card p{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 13px}
+    .test-reset-btn{width:100%;min-height:48px;border-radius:14px;background:#fff;color:var(--primary);border:1px solid #b9d6e8;font-weight:900}
+    .test-reset-btn:active{background:#eaf5fc}
+    @media (min-width:521px){.entry-shell{border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(20,108,148,.14);min-height:calc(100dvh - 36px)}body:has(.entry-shell:not([hidden])){padding:18px}}
+
+  
+    /* 13차: 1안 — 다대포 블루·화이트 플로팅 하단바 */
+    :root{--nav-h:92px}
+    .bottom-nav{
+      position:fixed;z-index:40;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);
+      width:min(496px,calc(100% - 28px));height:72px;padding:0 8px;
+      background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:24px;
+      box-shadow:0 12px 30px rgba(24,56,74,.14);backdrop-filter:blur(16px);
+      display:grid;grid-template-columns:repeat(5,1fr);gap:2px;overflow:visible;
+    }
+    .nav-item{
+      min-width:0;height:72px;padding:6px 0 5px;background:transparent;border-radius:18px;
+      color:#7e93a0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;
+      position:relative;overflow:visible;transition:color .2s ease,transform .2s ease;
+    }
+    .nav-icon{width:36px;height:36px;flex:0 0 36px;border-radius:50%;display:grid;place-items:center;color:currentColor;transition:.22s ease}
+    .nav-icon svg{width:21px;height:21px;stroke-width:1.9}
+    .nav-label{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:nowrap;border:0;font-size:11px;line-height:1.15;font-weight:700;color:currentColor;transition:.2s ease}
+    .nav-item:not(.scan-nav).active{color:var(--primary)}
+    .nav-item:not(.scan-nav).active .nav-icon{width:36px;height:36px;flex-basis:36px;transform:none;background:#e7f5fd;border:0;box-shadow:none}
+    .nav-item:not(.scan-nav).active .nav-label{transform:none;color:var(--primary);font-weight:900}
+    .nav-item:not(.scan-nav).active::after{content:"";display:block;position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--primary)}
+    .nav-item.scan-nav{color:#557584;padding-top:24px}
+    .nav-item.scan-nav .nav-icon,.nav-item.scan-nav.active .nav-icon{
+      position:absolute;left:50%;top:-22px;transform:translateX(-50%);margin:0;width:58px;height:58px;flex-basis:58px;
+      color:#fff;background:linear-gradient(145deg,var(--primary),#0f5f86);border:4px solid #fff;
+      box-shadow:0 9px 20px rgba(20,108,148,.27);
+    }
+    .nav-item.scan-nav.active .nav-icon{background:linear-gradient(145deg,#0f5f86,var(--primary-2));box-shadow:0 0 0 5px #ddf3fd,0 10px 22px rgba(20,108,148,.30)}
+    .nav-item.scan-nav .nav-icon svg{width:24px;height:24px;stroke-width:1.9}
+    .nav-item.scan-nav .nav-label{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);font-weight:900;color:#557584}
+    .nav-item.scan-nav.active .nav-label{transform:translateX(-50%);color:var(--primary)}
+    .nav-item.scan-nav.active::after{content:"";display:block;position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:34px;height:3px;border-radius:999px;background:var(--primary)}
+    .nav-item:active .nav-icon{transform:scale(.94)}
+    .nav-item.scan-nav:active .nav-icon,.nav-item.scan-nav.active:active .nav-icon{transform:translateX(-50%) scale(.95)}
+    @media (min-width:521px){.bottom-nav{bottom:calc(20px + env(safe-area-inset-bottom))}}
+
+  
+
+    /* 15차: 지도 목록 완전 대기 + 슬라이드 모션 / 상단 헤더 본문형 */
+    /* 헤더는 fixed·sticky가 아닌 일반 본문 블록입니다. 페이지와 함께 자연스럽게 스크롤됩니다. */
+    .topbar{
+      position:relative;top:auto;left:auto;transform:none;z-index:30;
+      width:100%;
+    }
+    .app{padding-top:0}
+    body.map-mode .app{padding-top:0}
+
+    /* 하단 메뉴는 목록이 열려도 항상 보이도록 목록보다 위에 둡니다. */
+    .bottom-nav{z-index:58}
+
+    /* 16차: 닫힌 목록은 DOM에서도 숨겨 하단에 한 줄도 남지 않도록 처리합니다. */
+    .map-list-backdrop{z-index:46;visibility:hidden}
+    .map-list-backdrop.open{visibility:visible}
+    .map-list-panel[hidden]{display:none !important}
+    .map-list-panel{
+      z-index:52;
+      bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));
+      max-height:min(60dvh,560px);
+      transform:translate(-50%,calc(100% + var(--nav-h) + 120px));
+      opacity:0;pointer-events:none;
+      transition:
+        transform .34s cubic-bezier(.22,.9,.28,1),
+        opacity .18s ease;
+      will-change:transform,opacity;
+    }
+    .map-list-panel.opening,
+    .map-list-panel.closing{display:flex}
+    .map-list-panel.open{
+      transform:translate(-50%,0);opacity:1;pointer-events:auto;
+    }
+    .map-list-panel.closing{
+      transform:translate(-50%,calc(100% + var(--nav-h) + 120px));
+      opacity:0;pointer-events:none;
+    }
+    .map-list-grab{
+      flex:0 0 18px;background:#fff;display:grid;place-items:center;padding-top:7px;
+    }
+    .map-list-grab i{width:42px;height:5px;border-radius:999px;background:#d7e4ec;display:block}
+    .map-list-head{padding-top:10px}
+
+    /* 열고 닫을 때 패널 내부가 살짝 따라오는 대기 모션 */
+    .map-list-panel .map-list-head,
+    .map-list-panel .map-list-scroll{
+      opacity:0;transform:translateY(10px);
+      transition:opacity .2s ease,transform .28s cubic-bezier(.22,.9,.28,1);
+    }
+    .map-list-panel.open .map-list-head,
+    .map-list-panel.open .map-list-scroll{opacity:1;transform:none;transition-delay:.08s}
+
+    @media(min-width:521px){
+      .topbar{width:100%;top:auto;border-radius:0}
+      .app{padding-top:0}
+      body.map-mode .app{padding-top:0}
+      .map-list-panel{bottom:calc(104px + env(safe-area-inset-bottom))}
+    }
+</style>
+</head>
+<body>
+
+<div class="entry-shell" id="entryShell">
+  <header class="entry-head">
+    <button class="entry-back" id="entryBack" type="button" aria-label="이전 화면" onclick="entryBack()" hidden>‹</button>
+    <div class="entry-brand"><span class="wave-mark">♫</span><span>다대포 가요제</span></div>
+    <span style="width:48px" aria-hidden="true"></span>
+  </header>
+  <main class="entry-main">
+    <section class="entry-step active" id="entry-method" data-step="1">
+      <div class="entry-progress"><i class="on"></i><i></i><i></i><i></i></div>
+      <span class="entry-kicker">자유 선택형 현장 실증</span>
+      <h1 class="entry-title">어떤 방법으로<br>참여하시겠어요?</h1>
+      <p class="entry-desc">두 방식의 이용 편의성을 비교하기 위한 실증입니다. 원하는 방법을 직접 선택해 주세요.</p>
+      <div class="method-list">
+        <button class="method-card" type="button" onclick="selectEntryMethod('qr')">
+          <span class="method-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h3v3H8zM14 9h2M14 12h2M8 15h8"/></svg></span>
+          <span class="method-copy"><strong>개인 QR 카드로 참여</strong><p>회원가입 없이 현장에서 받은 개인 QR 카드를 스캔해 바로 시작합니다.</p><span class="method-tags"><span>빠른 시작</span><span>개인정보 입력 없음</span></span></span>
+          <span class="method-arrow">›</span>
+        </button>
+        <button class="method-card" type="button" onclick="selectEntryMethod('account')">
+          <span class="method-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19c.8-3.5 3-5.2 6.5-5.2s5.7 1.7 6.5 5.2"/><path d="M18 6.5h2.5M19.25 5.25v2.5"/></svg></span>
+          <span class="method-copy"><strong>계정으로 참여</strong><p>카카오·Google 또는 아이디 계정으로 로그인해 다른 기기에서도 기록을 불러옵니다.</p><span class="method-tags"><span>기록 복구 편리</span><span>로그인 방식 선택</span></span></span>
+          <span class="method-arrow">›</span>
+        </button>
+      </div>
+      <div class="entry-note">두 선택지는 동일한 축제 지도와 스탬프 기능을 사용합니다. 선택 방식과 이용 과정은 실증 분석을 위해 익명 통계로 기록됩니다.</div>
+    </section>
+
+    <section class="entry-step" id="entry-qr" data-step="2">
+      <div class="entry-progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <span class="entry-kicker">개인 QR 카드 참여</span>
+      <h1 class="entry-title">개인 QR 카드를<br>받으셨나요?</h1>
+      <p class="entry-desc">현장 안내소에서 받은 카드를 연결하면 회원가입 없이 나의 스탬프판이 열립니다.</p>
+      <div class="qr-guide-card">
+        <div class="demo-card-visual"><div class="demo-card-copy"><small>DADEPO FESTIVAL</small><strong>나의 스탬프 카드</strong><span>참가번호 P-001</span></div><div class="mini-qr"></div></div>
+        <div class="guide-steps">
+          <div class="guide-step"><b>1</b><div><strong>개인 QR 카드 수령</strong><p>현장 안내소에서 카드 한 장을 받습니다.</p></div></div>
+          <div class="guide-step"><b>2</b><div><strong>카드 QR 연결</strong><p>카드의 QR을 휴대전화로 스캔합니다.</p></div></div>
+          <div class="guide-step"><b>3</b><div><strong>스탬프 참여 시작</strong><p>점포 QR을 스캔하며 도장을 모읍니다.</p></div></div>
+        </div>
+        <div class="entry-form">
+          <label class="field-label">시제품 참가번호 입력<input class="field-input" id="personalQrInput" inputmode="text" autocomplete="off" placeholder="예: P-001" value="P-001"></label>
+          <button class="entry-primary" type="button" onclick="connectPersonalQr()">개인 QR 카드 연결하기</button>
+          <button class="entry-secondary" type="button" onclick="connectDemoQr()">샘플 카드 P-001로 체험</button>
+        </div>
+      </div>
+      <p class="prototype-hint">현재 화면은 흐름 확인용입니다. 실제 운영에서는 카메라로 카드 QR을 읽고 서버 기록을 연결합니다.</p>
+    </section>
+
+    <section class="entry-step" id="entry-login-method" data-step="2">
+      <div class="entry-progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <span class="entry-kicker">계정 로그인 참여</span>
+      <h1 class="entry-title">편한 로그인 방법을<br>선택해 주세요</h1>
+      <p class="entry-desc">처음 선택한 로그인 방식으로 다시 접속하면 기존 스탬프 기록을 불러올 수 있습니다.</p>
+      <div class="social-list">
+        <button class="social-btn kakao" type="button" onclick="completeSocialLogin('kakao')"><span class="social-symbol">K</span>카카오로 시작하기</button>
+        <button class="social-btn google" type="button" onclick="completeSocialLogin('google')"><span class="social-symbol">G</span>Google로 시작하기</button>
+      </div>
+      <div class="or-divider">또는</div>
+      <button class="social-btn id" type="button" onclick="openIdAuth('signup')"><span class="social-symbol">ID</span>아이디로 가입하기</button>
+      <button class="entry-link" type="button" onclick="openIdAuth('login')">이미 아이디 계정이 있나요? 로그인</button>
+      <p class="prototype-hint">카카오·Google 버튼은 현재 시제품용 로그인 완료 흐름을 보여줍니다. 실제 인증은 서버 연동 단계에서 연결합니다.</p>
+    </section>
+
+    <section class="entry-step" id="entry-id-auth" data-step="3">
+      <div class="entry-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <span class="entry-kicker">아이디 계정</span>
+      <h1 class="entry-title">간단한 계정을<br>만들어 주세요</h1>
+      <p class="entry-desc">이름·전화번호·이메일 없이 아이디와 비밀번호만 사용합니다.</p>
+      <div class="auth-tabs"><button class="auth-tab active" id="signupTab" type="button" onclick="switchAuthTab('signup')">회원가입</button><button class="auth-tab" id="loginTab" type="button" onclick="switchAuthTab('login')">로그인</button></div>
+      <div class="auth-panel active" id="signupPanel">
+        <div class="entry-form">
+          <label class="field-label">아이디<input class="field-input" id="signupId" autocomplete="username" placeholder="영문 소문자·숫자 4~16자"><span class="field-help">예: sea2026</span></label>
+          <label class="field-label">비밀번호<div class="password-wrap"><input class="field-input" id="signupPw" type="password" autocomplete="new-password" placeholder="8자 이상"><button class="pw-toggle" type="button" onclick="togglePassword('signupPw',this)">보기</button></div></label>
+          <label class="field-label">비밀번호 확인<div class="password-wrap"><input class="field-input" id="signupPwConfirm" type="password" autocomplete="new-password" placeholder="비밀번호 다시 입력"><button class="pw-toggle" type="button" onclick="togglePassword('signupPwConfirm',this)">보기</button></div></label>
+          <label class="consent-row"><input id="signupConsent" type="checkbox"><span>서비스 이용과 실증 데이터 저장 안내를 확인했으며 필수 항목에 동의합니다.</span></label>
+          <div class="field-error" id="signupError"></div>
+          <button class="entry-primary" type="button" onclick="signupWithId()">회원가입하고 참여하기</button>
+        </div>
+      </div>
+      <div class="auth-panel" id="loginPanel">
+        <div class="entry-form">
+          <label class="field-label">아이디<input class="field-input" id="loginId" autocomplete="username" placeholder="가입한 아이디"></label>
+          <label class="field-label">비밀번호<div class="password-wrap"><input class="field-input" id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호"><button class="pw-toggle" type="button" onclick="togglePassword('loginPw',this)">보기</button></div></label>
+          <div class="field-error" id="loginError"></div>
+          <button class="entry-primary" type="button" onclick="loginWithId()">로그인하고 참여하기</button>
+          <button class="entry-link" type="button" onclick="alert('실서비스에서는 복구코드 또는 운영자 확인으로 비밀번호를 재설정합니다.')">아이디 또는 비밀번호를 잊으셨나요?</button>
+        </div>
+      </div>
+      <p class="prototype-hint">이 파일의 계정 정보는 화면 흐름 확인을 위해 현재 브라우저에만 임시 저장됩니다.</p>
+    </section>
+    <footer class="entry-footer">다대포 가요제 모바일 현장 안내 · 실증 시제품</footer>
+  </main>
+</div>
+
+<div class="app" id="mainApp" hidden>
+  <header class="topbar">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 4v10.5a3 3 0 1 1-2-2.82V6.2l8-1.8v8.1a3 3 0 1 1-2-2.82V2.9L14 4Z" fill="currentColor"/></svg></div>
+        <div><h1>다대포 가요제</h1><p>모바일 현장 안내</p></div>
+      </div>
+      <button class="notice-btn" aria-label="공지 보기" onclick="openNotice()"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4a4 4 0 0 1 4 4v1.2c0 .9.28 1.78.8 2.52l1.16 1.66c.48.68-.01 1.62-.84 1.62H6.88c-.83 0-1.32-.94-.84-1.62l1.16-1.66A4.4 4.4 0 0 0 8 9.2V8a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><i class="notice-dot"></i></button>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="page active" id="home">
+      <button class="home-alert" onclick="openNotice()" aria-label="긴급 공지 확인">
+        <span class="alert-badge">긴급 공지</span>
+        <strong>현장 상황에 따라 공연 시간이 변경될 수 있습니다.</strong>
+        <span class="alert-arrow">›</span>
+      </button>
+
+      <div class="hero">
+        <div class="eyebrow">FESTIVAL DAY MOBILE GUIDE</div>
+        <h2>노래와 바다가 만나는<br>다대포 가요제</h2>
+        <p>공연 일정, 행사장 위치, 참여 점포와 문의처를 모바일에서 바로 확인하세요.</p>
+        <div class="event-meta">
+          <span>축제 당일</span>
+          <span>다대포 행사장</span>
+          <span>운영시간 입력 예정</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>지금 진행 중</h3><button onclick="goPage('schedule')">전체 일정</button></div>
+        <div class="live-card">
+          <div class="live-head"><div class="live-label"><i class="pulse"></i> LIVE</div><span class="time-chip">18:00–18:30</span></div>
+          <h4>다대포 시민 노래자랑</h4>
+          <p>메인 무대 · 참가자 1부 경연</p>
+          <div class="mini-actions">
+            <button class="mini-btn primary-action" onclick="goPage('map');focusPin('stage')">지도에서 위치 보기</button>
+          </div>
+          <div class="next-event">
+            <div><small>다음 공연</small><strong>18:40 · 초청 가수 특별 공연</strong></div>
+            <button onclick="goPage('schedule')">확인</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>나의 스탬프 미션</h3></div>
+        <button class="home-stamp-card" onclick="goPage('scan')" aria-label="나의 스탬프 미션 열기">
+          <div><small id="homeParticipantLabel">개인 QR 카드 · P-001</small><strong id="homeStampCount">현재 0 / 5개</strong><p id="homeStampMessage">참여 점포 QR을 스캔해 도장을 모아보세요.</p></div>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>바로 시작하기</h3></div>
+        <div class="quick-grid priority-grid">
+          <button class="quick-card priority-card" onclick="goPage('map')">
+            <span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3.5 6.5 5-2.2 7 2.4 5-2.2v13l-5 2.2-7-2.4-5 2.2z"/><path d="M8.5 4.3v13M15.5 6.7v13"/></svg></span>
+            <span class="quick-copy"><strong>축제 지도</strong><span>무대·점포·화장실·주차장 찾기</span></span><i class="card-arrow">›</i>
+          </button>
+          <button class="quick-card priority-card" onclick="goPage('scan')">
+            <span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg></span>
+            <span class="quick-copy"><strong>QR 스탬프</strong><span>내 진행률 확인하고 점포 QR 스캔</span></span><i class="card-arrow">›</i>
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>행사 이용 안내</h3></div>
+        <div class="home-guide">
+          <div class="guide-row"><span class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13V9l12-4v12L4 13Z"/><path d="M8 13l1.4 5H6.5L5 13M16 9.5c2 0 3.5 1.1 3.5 2.5S18 14.5 16 14.5"/></svg></span><div><b>일정 변경 확인</b><p>우천이나 현장 사정으로 변경되는 내용은 홈 상단의 긴급 공지에 표시됩니다.</p></div></div>
+          <div class="guide-row"><span class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/></svg></span><div><b>도움이 필요할 때</b><p>분실물과 현장 문의는 문의 메뉴의 운영본부 전화 또는 지도 속 안내소를 이용하세요.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="map">
+      <div class="map-page-shell">
+        <div class="map-wrap">
+          <div class="map" id="festivalMap">
+            <iframe src="https://saegim-garden.web.app/view?v=3" title="축제 배치도" allow="geolocation" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:18px;z-index:20"></iframe>
+            <div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
+            <span class="map-label" style="left:23px;top:176px">행사장 입구</span>
+            <span class="map-label" style="right:34px;top:244px">먹거리 구역</span>
+            <button class="pin" data-id="stage" style="left:42%;top:210px" onclick="selectMapPlace('stage',this)" aria-label="메인 무대"><span>🎤</span></button>
+            <button class="pin" data-id="food1" style="left:67%;top:310px" onclick="selectMapPlace('food1',this)" aria-label="바다어묵"><span>🍢</span></button>
+            <button class="pin" data-id="shop1" style="left:25%;top:340px" onclick="selectMapPlace('shop1',this)" aria-label="다대포 기념공방"><span>🎁</span></button>
+            <button class="pin" data-id="food2" style="left:82%;top:375px" onclick="selectMapPlace('food2',this)" aria-label="바다 간식 부스"><span>🍧</span></button>
+            <button class="pin" data-id="experience1" style="left:34%;top:270px" onclick="selectMapPlace('experience1',this)" aria-label="해변 공예 체험"><span>🎨</span></button>
+            <button class="pin" data-id="info" style="left:12%;top:254px" onclick="selectMapPlace('info',this)" aria-label="운영 안내소"><span>ℹ️</span></button>
+            <button class="pin" data-id="toilet" style="left:73%;top:205px" onclick="selectMapPlace('toilet',this)" aria-label="공중화장실"><span>🚻</span></button>
+            <button class="pin" data-id="parking" style="left:45%;top:430px" onclick="selectMapPlace('parking',this)" aria-label="임시 주차장"><span>🅿️</span></button>
+          </div>
+        </div>
+
+        <div class="map-ui-top">
+          <div class="map-search" role="search">
+            <span class="map-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+            <input id="mapSearchInput" placeholder="점포·화장실·무대 검색" autocomplete="off" oninput="searchMapPlaces(this.value)">
+            <button class="map-search-clear" id="mapSearchClear" onclick="clearMapSearch()" aria-label="검색어 지우기"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg></button>
+          </div>
+          <div class="map-filter-strip" id="filters">
+            <button class="filter active" onclick="setFilter('전체',this)">전체</button>
+            <button class="filter" onclick="setFilter('미획득',this)">미획득</button>
+            <button class="filter" onclick="setFilter('먹거리',this)">먹거리</button>
+            <button class="filter" onclick="setFilter('체험·판매',this)">체험·판매</button>
+            <button class="filter" onclick="setFilter('편의시설',this)">편의시설</button>
+          </div>
+        </div>
+
+        <div class="map-status-pill"><i></i><span id="mapStatusText">행사장 전체 보기</span></div>
+        <button class="map-list-trigger" id="mapListTrigger" onclick="toggleMapList(true)" aria-controls="mapListPanel" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>목록 <b id="mapResultCount">8</b></button>
+
+        <div class="map-floating-tools">
+          <button class="map-float-btn" onclick="resetMapView()" aria-label="지도 초기 위치"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66"/><path d="M20 4v7h-7"/></svg></button>
+          <button class="map-float-btn primary" onclick="showCurrentLocation()" aria-label="현재 위치"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+        </div>
+
+        <div class="map-place-preview" id="mapPlacePreview" hidden></div>
+      </div>
+
+      <div class="map-list-backdrop" id="mapListBackdrop" onclick="toggleMapList(false)"></div>
+      <aside class="map-list-panel" id="mapListPanel" aria-label="점포와 시설 목록" aria-hidden="true" hidden>
+        <div class="map-list-grab" aria-hidden="true"><i></i></div>
+        <div class="map-list-head"><div><strong>점포·시설 목록</strong><span id="mapListSubtitle">전체 8곳</span></div><button class="map-list-close" onclick="toggleMapList(false)" aria-label="목록 닫기">×</button></div>
+        <div class="map-list-scroll"><div class="place-list" id="placeList"></div></div>
+      </aside>
+    </section>
+
+    <section class="page" id="scan">
+      <div class="page-head"><h2>나의 QR 스탬프</h2><p id="stampPageDescription">점포·부스 QR을 스캔해 방문 도장을 모아보세요.</p></div>
+      <div class="participant-summary">
+        <div class="participant-top"><div><small id="participantTypeText">참여 방식</small><h3 id="participantIdText">P-001</h3></div><span class="reward-chip" id="rewardChip">미션 진행 중</span></div>
+        <div class="stamp-board" id="stampBoard"></div>
+        <div class="stamp-progress"><span id="stampProgressBar"></span></div>
+        <div class="stamp-progress-text" id="stampProgressText">0 / 5개 완료</div>
+      </div>
+      <div class="stamp-main-actions">
+        <button class="btn primary scan-primary" onclick="toggleScannerPanel(true)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg>
+          점포 QR 스캔하기
+        </button>
+        <button class="btn secondary" id="identityInfoButton" onclick="showPersonalQr()">내 참여 정보 보기</button>
+        <button class="btn secondary" onclick="goPage('map');setFilter('미획득')">도장 장소 찾기</button>
+        <button class="text-action" id="recoveryHelpButton" onclick="showRecoveryHelp()">기록 복구 방법 보기</button>
+      </div>
+
+      <div class="scanner-workspace" id="scannerWorkspace">
+        <div class="section-title"><h3>점포 QR 스캔</h3><button onclick="toggleScannerPanel(false)">닫기</button></div>
+        <div class="scan-card">
+          <div class="scanner-view" id="scannerView">
+            <video id="qrVideo" playsinline muted></video>
+            <div class="scanner-placeholder" id="scannerPlaceholder">
+              <div class="camera-icon">▣</div>
+              <strong>점포 QR을 네모 안에 비춰주세요</strong>
+              <p>카메라 사용이 어려우면 저장된 QR 이미지나<br>점포 코드를 직접 입력할 수 있습니다.</p>
+            </div>
+            <div class="scan-frame" id="scanFrame"></div>
+          </div>
+          <p class="scan-status" id="scanStatus">아래 ‘카메라 시작’을 누르면 스캔을 시작합니다.</p>
+          <div class="scan-actions">
+            <button class="btn primary" id="startScanBtn" onclick="startScanner()">카메라 시작</button>
+            <label class="btn upload-btn">이미지 불러오기<input type="file" accept="image/*" capture="environment" onchange="scanImageFile(this)"></label>
+          </div>
+          <div class="qr-result" id="qrResult"><small>스캔 결과</small><strong id="qrResultText"></strong></div>
+        </div>
+        <div class="manual-scan">
+          <h3>점포 코드 직접 입력</h3>
+          <p>시제품 체험용 코드는 DADAE-001부터 DADAE-005까지입니다.</p>
+          <div class="manual-row"><input id="manualQrCode" placeholder="예: DADAE-001" autocomplete="off"><button onclick="submitManualCode()">도장 받기</button></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>최근 도장 기록</h3><button onclick="renderStampUI()">새로고침</button></div>
+        <div class="stamp-history" id="stampHistory"></div>
+      </div>
+      <div class="section"><div class="notice-card"><span class="notice-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><b>개인 QR 카드 안내</b><p>개인 QR은 내 도장판을 여는 열쇠입니다. 다른 사람에게 공유하지 마세요. 실제 기록은 서버에 저장됩니다.</p></div></div></div>
+    </section>
+
+    <section class="page" id="schedule">
+      <div class="page-head"><h2>행사 일정</h2><p>공연과 프로그램 위치를 지도에서 바로 확인할 수 있습니다.</p></div>
+      <div class="schedule-tabs">
+        <button class="schedule-tab active" onclick="renderSchedule('now',this)">진행 중</button>
+        <button class="schedule-tab" onclick="renderSchedule('next',this)">곧 시작</button>
+        <button class="schedule-tab" onclick="renderSchedule('all',this)">전체 일정</button>
+      </div>
+      <div class="schedule-list" id="scheduleList"></div>
+    </section>
+
+    <section class="page" id="contact">
+      <div class="page-head"><h2>문의·도움말</h2><p>현장에서 필요한 문의 항목을 선택하세요.</p></div>
+      <div class="contact-grid">
+        <a class="contact-card" href="tel:051-000-0000"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h3l1.2 4-2 1.5a14 14 0 0 0 5.3 5.3l1.5-2L20 14v3c0 1.1-.9 2-2 2C10.8 19 5 13.2 5 6c0-1.1.9-2 2-2Z"/></svg></span><strong>운영본부 전화</strong><span>행사 진행과 현장 운영 문의</span></a>
+        <button class="contact-card" onclick="showToast('카카오톡 문의 주소를 연결할 수 있습니다.')"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5A3.5 3.5 0 0 1 7.5 3h9A3.5 3.5 0 0 1 20 6.5v6a3.5 3.5 0 0 1-3.5 3.5H11l-4.5 3v-3A3.5 3.5 0 0 1 3 12.5v-6Z"/></svg></span><strong>카카오톡 문의</strong><span>공식 채널 연결 예정</span></button>
+        <button class="contact-card" onclick="goPage('map');focusPin('info')"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m14.8 9.2-1.9 4.1-4.1 1.9 1.9-4.1 4.1-1.9Z"/></svg></span><strong>안내소 찾기</strong><span>지도에서 운영 안내소 확인</span></button>
+        <a class="contact-card" href="tel:112"><span class="quick-icon danger-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 3.5 19h17L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg></span><strong>긴급 상황</strong><span>위급한 상황은 112에 신고</span></a>
+      </div>
+      <div class="section">
+        <div class="section-title"><h3>자주 묻는 질문</h3></div>
+        <div class="faq-list">
+          <details><summary>주차장은 어디에 있나요?</summary><p>지도에서 ‘편의시설’ 필터를 선택한 뒤 주차장 핀을 누르면 위치와 안내를 확인할 수 있습니다.</p></details>
+          <details><summary>분실물은 어디에 문의하나요?</summary><p>운영 안내소에 방문하거나 운영본부 전화 버튼을 이용해 문의하세요.</p></details>
+          <details><summary>행사 일정이 바뀔 수도 있나요?</summary><p>우천과 현장 상황에 따라 일부 일정이 변경될 수 있으며 상단 공지로 안내됩니다.</p></details>
+          <details><summary>참여 점포 정보는 어디서 보나요?</summary><p>축제 지도에서 먹거리 또는 체험·판매 필터를 선택하면 점포 목록과 상세 정보를 확인할 수 있습니다.</p></details>
+        </div>
+      </div>
+      <div class="test-reset-card">
+        <small>테스트 전용</small>
+        <strong>참여 흐름 처음부터 다시 보기</strong>
+        <p>현재 로그인·개인 QR·도장·임시 계정 데이터를 초기화하고 참여 방식 선택 화면부터 다시 시작합니다.</p>
+        <button class="test-reset-btn" type="button" onclick="resetTestFlow()">로그인·참여 선택부터 다시 시작</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="주 메뉴">
+    <button class="nav-item active" data-page="home" onclick="goPage('home',this)" aria-label="홈">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.7 12 3.8l8.5 6.9"/><path d="M5.7 9.8v10.1h12.6V9.8"/><path d="M9.6 19.9v-5.8h4.8v5.8"/></svg></span><span class="nav-label">홈</span>
+    </button>
+    <button class="nav-item" data-page="map" onclick="goPage('map',this)" aria-label="지도">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 6.5 5-2.2 7 2.4 5-2.2v13l-5 2.2-7-2.4-5 2.2z"/><path d="M8.5 4.3v13M15.5 6.7v13"/></svg></span><span class="nav-label">지도</span>
+    </button>
+    <button class="nav-item scan-nav" data-page="scan" onclick="goPage('scan',this)" aria-label="QR 스캔">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg></span><span class="nav-label">QR 스캔</span>
+    </button>
+    <button class="nav-item" data-page="schedule" onclick="goPage('schedule',this)" aria-label="일정">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16M8 13h3M13 13h3M8 16h3"/></svg></span><span class="nav-label">일정</span>
+    </button>
+    <button class="nav-item" data-page="contact" onclick="goPage('contact',this)" aria-label="문의">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M4.6 15.2 3.7 20l4.8-.9"/><path d="M9.5 9.4a2.7 2.7 0 0 1 5.1 1.2c0 2-2.1 2.2-2.5 3.7M12.1 17h.01"/></svg></span><span class="nav-label">문의</span>
+    </button>
+  </nav>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<aside class="sheet" id="placeSheet"><div class="grab"></div><div id="sheetContent"></div></aside>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+// Firebase (구글 실제 OAuth 로그인용)
+const firebaseConfig={
+  apiKey:"AIzaSyDR9WBSaE7GHtaSPiH1sCLjtfJ85tzVtjM",
+  authDomain:"saegim-garden.firebaseapp.com",
+  projectId:"saegim-garden",
+  storageBucket:"saegim-garden.firebasestorage.app",
+  messagingSenderId:"846018467538",
+  appId:"1:846018467538:web:fb5fa0e5c9f9056e427f0b"
+};
+try{firebase.initializeApp(firebaseConfig)}catch(e){}
+const googleProvider=new firebase.auth.GoogleAuthProvider();
+
+let places={
+  stage:{name:'메인 무대',category:'편의시설',emoji:'🎤',summary:'가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 시민 노래자랑 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false},
+  food1:{name:'바다어묵',category:'먹거리',emoji:'🍢',summary:'따뜻한 부산 어묵과 음료를 판매하는 참여 점포',hours:'16:00–21:30',info:'대표 메뉴: 꼬치어묵, 물떡, 어묵국물',contact:'현장 주문',stampable:true,code:'DADAE-001'},
+  shop1:{name:'다대포 기념공방',category:'체험·판매',emoji:'🎁',summary:'바다 테마 기념품과 간단한 만들기 체험',hours:'16:00–20:30',info:'판매: 키링, 엽서, 축제 기념 배지',contact:'인스타그램·현장 문의',stampable:true,code:'DADAE-002'},
+  food2:{name:'바다 간식 부스',category:'먹거리',emoji:'🍧',summary:'시원한 음료와 축제 간식을 판매하는 참여 부스',hours:'16:00–21:30',info:'대표 메뉴: 슬러시, 아이스크림, 음료',contact:'현장 주문',stampable:true,code:'DADAE-003'},
+  experience1:{name:'해변 공예 체험',category:'체험·판매',emoji:'🎨',summary:'다대포 바다를 주제로 작은 공예품을 만드는 체험 부스',hours:'16:00–20:30',info:'체험: 바다 키링과 미니 배지 만들기',contact:'현장 접수',stampable:true,code:'DADAE-004'},
+  info:{name:'운영 안내소',category:'편의시설',emoji:'ℹ️',summary:'행사 안내, 분실물, 일정 변경과 경품 수령 문의',hours:'15:30–행사 종료',info:'분실물 접수와 미션 경품 수령을 지원합니다.',contact:'051-000-0000',stampable:true,code:'DADAE-005'},
+  toilet:{name:'공중화장실',category:'편의시설',emoji:'🚻',summary:'행사장 북쪽 공중화장실',hours:'상시 이용',info:'장애인 화장실과 기저귀 교환대가 있습니다.',contact:'-',stampable:false},
+  parking:{name:'임시 주차장',category:'편의시설',emoji:'🅿️',summary:'행사 방문객 임시 주차 구역',hours:'15:00–22:00',info:'혼잡 시 대중교통 이용을 권장합니다.',contact:'주차 안내요원 문의',stampable:false}
+};
+
+let REQUIRED_STAMPS=5;
+const safeStorage=(()=>{
+  try{const k='__dadepo_test__';localStorage.setItem(k,'1');localStorage.removeItem(k);return localStorage}
+  catch(e){const mem={};return{getItem:k=>Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null,setItem:(k,v)=>{mem[k]=String(v)},removeItem:k=>{delete mem[k]},clear:()=>Object.keys(mem).forEach(k=>delete mem[k])}}
+})();
+const queryParams=new URLSearchParams(location.search);
+// QR 자동 로그인 식별자: ?participant= / ?id= / ?login= 지원
+const urlParticipant=(queryParams.get('participant')||queryParams.get('id')||queryParams.get('login')||'').trim()||null;
+let participantId=urlParticipant||safeStorage.getItem('dadepo_participant_id')||'P-001';
+let participationMode=safeStorage.getItem('dadepo_participation_mode')||'qr';
+let authMethod=safeStorage.getItem('dadepo_auth_method')||'';
+let stampStorageKey=`dadepo_stamp_demo_${participantId}`;
+let stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
+function saveStampRecords(){safeStorage.setItem(stampStorageKey,JSON.stringify(stampRecords))}
+function switchParticipant(nextId,mode,auth=''){
+  participantId=nextId;
+  participationMode=mode;
+  authMethod=auth;
+  safeStorage.setItem('dadepo_participant_id',participantId);
+  safeStorage.setItem('dadepo_participation_mode',participationMode);
+  safeStorage.setItem('dadepo_auth_method',authMethod);
+  stampStorageKey=`dadepo_stamp_demo_${participantId}`;
+  stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
+}
+function hasStamp(spotId){return stampRecords.some(r=>r.spotId===spotId)}
+function stampablePlaces(){return Object.entries(places).filter(([_,p])=>p.stampable).slice(0,REQUIRED_STAMPS)}
+
+
+const schedules=[
+  {time:'17:00',end:'17:30',title:'개막 안내 및 축하 공연',place:'메인 무대',status:'done',desc:'지역 예술팀의 개막 축하 무대'},
+  {time:'18:00',end:'18:30',title:'다대포 시민 노래자랑 1부',place:'메인 무대',status:'now',desc:'참가자 1부 경연'},
+  {time:'18:40',end:'19:10',title:'초청 가수 공연',place:'메인 무대',status:'next',desc:'지역 초청 가수 특별 공연'},
+  {time:'19:20',end:'20:00',title:'다대포 시민 노래자랑 2부',place:'메인 무대',status:'next',desc:'참가자 2부 경연'},
+  {time:'20:10',end:'20:40',title:'시상식과 폐막 공연',place:'메인 무대',status:'next',desc:'수상자 발표 및 피날레 무대'}
+];
+
+function goPage(id,navEl){
+  if(id!=='scan') stopScanner();
+  document.body.classList.toggle('map-mode',id==='map');
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===id));
+  if(id!=='map') toggleMapList(false);
+  window.scrollTo({top:0,behavior:id==='map'?'auto':'smooth'});
+  if(id==='map') renderPlaces(currentFilter);
+  if(id==='scan') renderStampUI();
+  if(id==='schedule'&&!document.querySelector('#scheduleList').children.length) renderSchedule('now');
+}
+
+let currentFilter='전체';
+let mapSearchQuery='';
+let selectedMapPlaceId=null;
+function getFilteredPlaces(){
+  const q=mapSearchQuery.trim().toLowerCase();
+  return Object.entries(places).filter(([id,p])=>{
+    const categoryMatch=currentFilter==='전체'||(currentFilter==='미획득'?p.stampable&&!hasStamp(id):p.category===currentFilter);
+    const searchMatch=!q||`${p.name} ${p.category} ${p.summary} ${p.info||''}`.toLowerCase().includes(q);
+    return categoryMatch&&searchMatch;
+  });
+}
+function renderPlaces(filter=currentFilter){
+  currentFilter=filter;
+  const list=document.getElementById('placeList');
+  if(!list)return;
+  const rows=getFilteredPlaces();
+  list.innerHTML=rows.length?rows.map(([id,p])=>{
+    const state=p.stampable?(hasStamp(id)?'<i class="stamp-state done">도장 완료</i>':'<i class="stamp-state todo">미획득</i>'):'';
+    return `<button class="place-card" onclick="selectMapPlace('${id}');toggleMapList(false)"><span class="place-thumb">${p.emoji}</span><span><h4>${p.name}</h4><p>${p.summary}</p><i class="place-tag">${p.category}</i>${state}</span><span class="chev">›</span></button>`;
+  }).join(''):'<div class="map-list-empty">조건에 맞는 점포나 시설이 없습니다.</div>';
+  const count=document.getElementById('mapResultCount');if(count)count.textContent=rows.length;
+  const subtitle=document.getElementById('mapListSubtitle');if(subtitle)subtitle.textContent=`${currentFilter}${mapSearchQuery?' 검색':''} · ${rows.length}곳`;
+  const status=document.getElementById('mapStatusText');if(status)status.textContent=mapSearchQuery?`“${mapSearchQuery}” 검색 결과 ${rows.length}곳`:`${currentFilter} ${rows.length}곳 보기`;
+  updateMapPins(rows.map(r=>r[0]));
+}
+function setFilter(filter,el){
+  currentFilter=filter;
+  document.querySelectorAll('#filters .filter').forEach(b=>b.classList.toggle('active',b.textContent.trim()===filter));
+  renderPlaces(filter);
+}
+function searchMapPlaces(value){
+  mapSearchQuery=String(value||'');
+  document.getElementById('mapSearchClear')?.classList.toggle('show',!!mapSearchQuery);
+  renderPlaces(currentFilter);
+}
+function clearMapSearch(){
+  mapSearchQuery='';
+  const input=document.getElementById('mapSearchInput');if(input){input.value='';input.focus()}
+  document.getElementById('mapSearchClear')?.classList.remove('show');
+  renderPlaces(currentFilter);
+}
+function updateMapPins(visibleIds){
+  const allowed=new Set(visibleIds);
+  document.querySelectorAll('#festivalMap .pin').forEach(pin=>pin.classList.toggle('is-muted',!allowed.has(pin.dataset.id)));
+  if(selectedMapPlaceId&&!allowed.has(selectedMapPlaceId))clearMapSelection();
+}
+let mapListMotionToken=0;
+let mapListHideTimer=0;
+function toggleMapList(open){
+  const panel=document.getElementById('mapListPanel');
+  const backdrop=document.getElementById('mapListBackdrop');
+  const trigger=document.getElementById('mapListTrigger');
+  if(!panel||!backdrop)return;
+  const token=++mapListMotionToken;
+  window.clearTimeout(mapListHideTimer);
+
+  if(open){
+    renderPlaces(currentFilter);
+    panel.hidden=false;
+    panel.classList.remove('open','closing');
+    panel.classList.add('opening');
+    panel.setAttribute('aria-hidden','false');
+    trigger?.setAttribute('aria-expanded','true');
+    backdrop.classList.add('open');
+
+    // 숨김을 먼저 해제한 뒤 두 프레임을 기다려 아래에서 올라오는 모션을 만듭니다.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(token!==mapListMotionToken)return;
+      panel.classList.add('open');
+      panel.classList.remove('opening');
+      panel.querySelector('.map-list-close')?.focus({preventScroll:true});
+    }));
+  }else{
+    trigger?.setAttribute('aria-expanded','false');
+    backdrop.classList.remove('open');
+    panel.setAttribute('aria-hidden','true');
+
+    if(panel.hidden){
+      panel.classList.remove('open','opening','closing');
+      return;
+    }
+
+    panel.classList.remove('open','opening');
+    panel.classList.add('closing');
+
+    // 내려가는 모션이 끝난 다음 display:none과 같은 hidden 상태로 전환합니다.
+    mapListHideTimer=window.setTimeout(()=>{
+      if(token!==mapListMotionToken||panel.classList.contains('open'))return;
+      panel.hidden=true;
+      panel.classList.remove('closing');
+    },380);
+  }
+}
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&document.getElementById('mapListPanel')?.classList.contains('open')){
+    toggleMapList(false);
+    document.getElementById('mapListTrigger')?.focus({preventScroll:true});
+  }
+});
+function selectMapPlace(id,pinEl){
+  const p=places[id];if(!p)return;
+  selectedMapPlaceId=id;
+  document.querySelectorAll('#festivalMap .pin').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
+  const pin=pinEl||document.querySelector(`#festivalMap .pin[data-id="${id}"]`);if(pin)pin.classList.add('active');
+  const state=p.stampable?(hasStamp(id)?'도장 완료':'도장 미획득'):'편의시설';
+  const actionIcon=p.stampable&&!hasStamp(id)?'<svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8z"/></svg>':'<svg viewBox="0 0 24 24"><path d="M5 19 19 5M8 5h11v11"/></svg>';
+  const action=p.stampable&&!hasStamp(id)?`goPage('scan');toggleScannerPanel(true)`:`showToast('길찾기는 실제 지도 연결 단계에서 적용됩니다.')`;
+  const preview=document.getElementById('mapPlacePreview');
+  preview.innerHTML=`<span class="map-preview-icon">${p.emoji}</span><span class="map-preview-copy"><strong>${p.name}</strong><span>${p.category} · ${p.hours}</span><span class="map-preview-state">${state}</span></span><span class="map-preview-actions"><button onclick="showSelectedPlaceDetails()" aria-label="상세 정보"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/></svg></button><button class="primary" onclick="${action}" aria-label="${p.stampable&&!hasStamp(id)?'QR 스캔':'길찾기'}">${actionIcon}</button></span>`;
+  preview.hidden=false;
+  const status=document.getElementById('mapStatusText');if(status)status.textContent=`${p.name} 선택됨`;
+}
+function showSelectedPlaceDetails(){if(selectedMapPlaceId)openPlace(selectedMapPlaceId)}
+function clearMapSelection(){
+  selectedMapPlaceId=null;
+  document.querySelectorAll('#festivalMap .pin').forEach(x=>x.classList.remove('active'));
+  const preview=document.getElementById('mapPlacePreview');if(preview)preview.hidden=true;
+}
+function resetMapView(){clearMapSelection();clearMapSearch();setFilter('전체',document.querySelector('#filters .filter'));showToast('행사장 전체 위치로 돌아왔습니다.')}
+function showCurrentLocation(){showToast('실서비스에서는 GPS로 현재 위치를 지도에 표시합니다.')}
+function openPlace(id,pinEl){
+  const p=places[id]; if(!p)return;
+  document.querySelectorAll('.pin').forEach(x=>x.classList.remove('active'));
+  const pin=pinEl||document.querySelector(`.pin[data-id="${id}"]`); if(pin)pin.classList.add('active');
+  const stampInfo=p.stampable?(hasStamp(id)?'✓ 도장 획득 완료':`아직 받지 않은 도장 · 코드 ${p.code}`):'도장 미운영 시설';
+  const scanButton=p.stampable&&!hasStamp(id)?`<button class="btn primary" onclick="closeSheet();goPage('scan');toggleScannerPanel(true)">QR 스캔</button>`:`<button class="btn primary" onclick="showToast('외부 지도 길찾기 연결 예정입니다.')">길찾기</button>`;
+  document.getElementById('sheetContent').innerHTML=`
+    <div class="sheet-hero">${p.emoji}</div>
+    <h3>${p.name}</h3><div class="sub">${p.category} · ${p.summary}</div>
+    <div class="info-row"><b>도장 상태</b><span>${stampInfo}</span></div>
+    <div class="info-row"><b>운영시간</b><span>${p.hours}</span></div>
+    <div class="info-row"><b>주요 정보</b><span>${p.info}</span></div>
+    <div class="info-row"><b>문의</b><span>${p.contact}</span></div>
+    <div class="sheet-actions"><button class="btn" onclick="closeSheet()">닫기</button>${scanButton}</div>`;
+  document.getElementById('sheetBackdrop').classList.add('open');
+  document.getElementById('placeSheet').classList.add('open');
+}
+function openNotice(){
+  document.getElementById('sheetContent').innerHTML=`
+    <div class="sheet-hero">📢</div>
+    <h3>축제 공지</h3><div class="sub">축제 당일 변경 사항과 주요 안내</div>
+    <div class="info-row"><b>긴급</b><span>현장 상황에 따라 공연 시간이 변경될 수 있습니다. 변경 시 이 화면에서 즉시 안내합니다.</span></div>
+    <div class="info-row"><b>주차</b><span>행사장 주변이 혼잡할 수 있으니 대중교통 이용을 권장합니다.</span></div>
+    <div class="info-row"><b>안전</b><span>응급 상황은 112 또는 현장 운영 안내소로 연락하세요.</span></div>
+    <div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>`;
+  document.getElementById('sheetBackdrop').classList.add('open');
+  document.getElementById('placeSheet').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  document.getElementById('placeSheet').classList.remove('open');
+  document.querySelectorAll('.pin').forEach(x=>x.classList.remove('active'));
+}
+function focusPin(id){setTimeout(()=>selectMapPlace(id,document.querySelector(`#festivalMap .pin[data-id=\"${id}\"]`)),180)}
+function renderSchedule(mode='now',el){
+  if(el){document.querySelectorAll('.schedule-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
+  let rows=mode==='all'?schedules:schedules.filter(s=>s.status===mode);
+  if(!rows.length&&mode==='now')rows=schedules.filter(s=>s.status==='next').slice(0,1);
+  document.getElementById('scheduleList').innerHTML=rows.map(s=>`<article class="schedule-card ${s.status==='now'?'now':''}"><div class="time-box"><strong>${s.time}</strong><span>~ ${s.end}</span></div><div><h4>${s.title}</h4><p>${s.desc}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${s.place}</button>${s.status==='now'?'<span class="status-badge">진행 중</span>':s.status==='next'?'<span class="status-badge">예정</span>':''}</div></div></article>`).join('');
+}
+
+let qrStream=null, qrScanTimer=null, qrDetector=null, lastQrValue='';
+
+async function startScanner(){
+  const status=document.getElementById('scanStatus');
+  const video=document.getElementById('qrVideo');
+  const placeholder=document.getElementById('scannerPlaceholder');
+  const frame=document.getElementById('scanFrame');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    status.textContent='이 브라우저에서는 카메라를 사용할 수 없습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
+    return;
+  }
+  if(!('BarcodeDetector' in window)){
+    status.textContent='이 브라우저는 QR 자동 인식을 지원하지 않습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
+    return;
+  }
+  try{
+    stopScanner();
+    qrDetector=new BarcodeDetector({formats:['qr_code']});
+    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    video.srcObject=qrStream;
+    await video.play();
+    video.style.display='block';
+    placeholder.style.display='none';
+    frame.style.display='block';
+    status.textContent='QR 코드가 네모 안에 들어오도록 비춰주세요.';
+    document.getElementById('startScanBtn').textContent='■ 카메라 끄기';
+    document.getElementById('startScanBtn').onclick=stopScanner;
+    scanVideoFrame();
+  }catch(err){
+    status.textContent='카메라 권한을 확인해주세요. 로컬 파일에서는 제한될 수 있으며, HTTPS 배포 후 정상 작동합니다.';
+  }
+}
+
+async function scanVideoFrame(){
+  const video=document.getElementById('qrVideo');
+  if(!qrStream||!qrDetector)return;
+  try{
+    const codes=await qrDetector.detect(video);
+    if(codes.length){
+      handleQrResult(codes[0].rawValue||'QR 코드 확인');
+      return;
+    }
+  }catch(e){}
+  qrScanTimer=setTimeout(scanVideoFrame,250);
+}
+
+function stopScanner(){
+  if(qrScanTimer){clearTimeout(qrScanTimer);qrScanTimer=null}
+  if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null}
+  const video=document.getElementById('qrVideo');
+  if(video){video.pause();video.srcObject=null;video.style.display='none'}
+  const placeholder=document.getElementById('scannerPlaceholder');
+  const frame=document.getElementById('scanFrame');
+  if(placeholder)placeholder.style.display='block';
+  if(frame)frame.style.display='none';
+  const btn=document.getElementById('startScanBtn');
+  if(btn){btn.textContent='카메라 시작';btn.onclick=startScanner}
+}
+
+async function scanImageFile(input){
+  const file=input.files&&input.files[0];
+  const status=document.getElementById('scanStatus');
+  if(!file)return;
+  if(!('BarcodeDetector' in window)){
+    status.textContent='현재 브라우저는 이미지 QR 인식을 지원하지 않습니다. 코드를 직접 입력해주세요.';
+    input.value='';return;
+  }
+  try{
+    qrDetector=qrDetector||new BarcodeDetector({formats:['qr_code']});
+    const bitmap=await createImageBitmap(file);
+    const codes=await qrDetector.detect(bitmap);
+    bitmap.close();
+    if(codes.length)handleQrResult(codes[0].rawValue||'QR 코드 확인');
+    else status.textContent='이미지에서 QR 코드를 찾지 못했습니다. QR이 선명한 사진으로 다시 시도해주세요.';
+  }catch(err){status.textContent='이미지를 읽지 못했습니다. 다른 사진을 선택해주세요.'}
+  input.value='';
+}
+
+function toggleScannerPanel(open){
+  const panel=document.getElementById('scannerWorkspace');
+  panel.classList.toggle('open',!!open);
+  if(open)setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),80);else stopScanner();
+}
+
+function findSpotByQr(value){
+  const raw=String(value||'').trim();
+  let code=raw.toUpperCase();
+  try{
+    if(/^https?:\/\//i.test(raw)){
+      const u=new URL(raw);code=(u.searchParams.get('code')||u.searchParams.get('spot')||u.pathname.split('/').filter(Boolean).pop()||'').toUpperCase();
+    }
+  }catch(e){}
+  return Object.entries(places).find(([id,p])=>p.stampable&&(p.code===code||id.toUpperCase()===code));
+}
+
+function addStamp(spotId){
+  const p=places[spotId];
+  if(!p||!p.stampable){showToast('도장 적립 장소가 아닙니다.');return}
+  if(hasStamp(spotId)){showToast('이미 받은 도장입니다.');renderStampUI();return}
+  stampRecords.push({spotId,stampedAt:new Date().toISOString()});
+  saveStampRecords();
+  renderStampUI();renderPlaces(currentFilter);
+  showStampSuccess(p);
+}
+
+function showStampSuccess(p){
+  document.getElementById('sheetContent').innerHTML=`
+    <div class="sheet-hero">${p.emoji}</div><h3>도장이 찍혔어요!</h3>
+    <div class="sub">${p.name} 방문 도장을 획득했습니다.</div>
+    <div class="info-row"><b>진행률</b><span>${stampRecords.length} / ${REQUIRED_STAMPS}개 완료</span></div>
+    <div class="info-row"><b>다음 행동</b><span>${stampRecords.length>=REQUIRED_STAMPS?'운영 안내소에서 개인 QR을 보여주고 경품을 확인하세요.':'지도에서 아직 받지 않은 도장을 확인하세요.'}</span></div>
+    <div class="sheet-actions"><button class="btn" onclick="closeSheet()">확인</button><button class="btn primary" onclick="closeSheet();goPage('map');setFilter('미획득')">다음 장소</button></div>`;
+  document.getElementById('sheetBackdrop').classList.add('open');document.getElementById('placeSheet').classList.add('open');
+}
+
+function handleQrResult(value){
+  lastQrValue=String(value||'').trim();
+  stopScanner();
+  const result=document.getElementById('qrResult');
+  document.getElementById('qrResultText').textContent=lastQrValue;
+  result.classList.add('show');
+  const spot=findSpotByQr(lastQrValue);
+  if(!spot){document.getElementById('scanStatus').textContent='등록되지 않은 점포 QR입니다.';showToast('유효한 점포 QR이 아닙니다.');return}
+  document.getElementById('scanStatus').textContent=`${spot[1].name} QR을 확인했습니다.`;
+  addStamp(spot[0]);
+}
+
+function submitManualCode(){
+  const input=document.getElementById('manualQrCode');
+  const value=input.value.trim();
+  if(!value){showToast('점포 코드를 입력해주세요.');return}
+  handleQrResult(value.toUpperCase());input.value='';
+}
+
+function renderStampUI(){
+  const spots=stampablePlaces();
+  const count=Math.min(stampRecords.length,REQUIRED_STAMPS);
+  const board=document.getElementById('stampBoard');
+  if(board)board.innerHTML=spots.map(([id,p])=>hasStamp(id)?`<div class="stamp-slot done"><span><b class="stamp-emoji">${p.emoji}</b>${p.name}</span></div>`:`<div class="stamp-slot"><span><b class="stamp-emoji">○</b>${p.name}</span></div>`).join('');
+  const bar=document.getElementById('stampProgressBar');if(bar)bar.style.width=`${Math.min(100,count/REQUIRED_STAMPS*100)}%`;
+  const txt=document.getElementById('stampProgressText');if(txt)txt.textContent=`${count} / ${REQUIRED_STAMPS}개 완료`;
+  const chip=document.getElementById('rewardChip');if(chip)chip.textContent=count>=REQUIRED_STAMPS?'경품 수령 가능':'미션 진행 중';
+  const pid=document.getElementById('participantIdText');if(pid)pid.textContent=participantId;
+  const methodLabel=participationMode==='qr'?'개인 QR 카드':authMethod==='kakao'?'카카오 로그인':authMethod==='google'?'Google 로그인':'아이디 로그인';
+  const homeLabel=document.getElementById('homeParticipantLabel');if(homeLabel)homeLabel.textContent=`${methodLabel} · ${participantId}`;
+  const typeText=document.getElementById('participantTypeText');if(typeText)typeText.textContent=methodLabel;
+  const desc=document.getElementById('stampPageDescription');if(desc)desc.textContent=participationMode==='qr'?'개인 QR 카드에 점포·부스 방문 도장이 저장됩니다.':'로그인 계정에 점포·부스 방문 도장이 저장됩니다.';
+  const identityBtn=document.getElementById('identityInfoButton');if(identityBtn)identityBtn.textContent=participationMode==='qr'?'내 개인 QR 보기':'내 계정 정보 보기';
+  const homeCount=document.getElementById('homeStampCount');if(homeCount)homeCount.textContent=`현재 ${count} / ${REQUIRED_STAMPS}개`;
+  const homeMsg=document.getElementById('homeStampMessage');if(homeMsg)homeMsg.textContent=count>=REQUIRED_STAMPS?'미션 완료! 운영 안내소에서 경품을 확인하세요.':'참여 점포 QR을 스캔해 도장을 모아보세요.';
+  const hist=document.getElementById('stampHistory');
+  if(hist){
+    const records=[...stampRecords].reverse();
+    hist.innerHTML=records.length?records.map(r=>{const p=places[r.spotId];return `<div class="stamp-history-row"><span class="mark">${p.emoji}</span><div><b>${p.name}</b><span>${new Date(r.stampedAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})} · 도장 획득</span></div></div>`}).join(''):`<div class="stamp-empty">아직 받은 도장이 없습니다.<br>점포·부스 QR을 스캔하면 기록이 여기에 표시됩니다.</div>`;
+  }
+}
+
+function showPersonalQr(){
+  if(participationMode==='qr'){
+    document.getElementById('sheetContent').innerHTML=`
+      <div class="personal-qr-visual"><i class="personal-qr-third"></i></div>
+      <h3 style="text-align:center">나의 개인 QR</h3><div class="sub" style="text-align:center">참가번호 ${participantId}</div>
+      <div class="info-row"><b>참여 방식</b><span>사전 발급 개인 QR 카드</span></div>
+      <div class="info-row"><b>역할</b><span>기존 도장판을 다시 불러오고 경품 수령 시 참가자를 확인합니다.</span></div>
+      <div class="info-row"><b>주의</b><span>다른 사람에게 공유하면 같은 도장판에 접근할 수 있습니다.</span></div>
+      <div class="sheet-actions"><button class="btn" onclick="closeSheet()">닫기</button><button class="btn primary" onclick="showToast('실서비스에서는 개인 QR 이미지를 저장합니다.')">QR 저장</button></div>`;
+  }else{
+    const loginName=authMethod==='kakao'?'카카오':authMethod==='google'?'Google':'아이디·비밀번호';
+    document.getElementById('sheetContent').innerHTML=`
+      <div class="sheet-hero">👤</div><h3>나의 계정 참여 정보</h3><div class="sub">운영 참가번호 ${participantId}</div>
+      <div class="info-row"><b>로그인 방식</b><span>${loginName}</span></div>
+      <div class="info-row"><b>기록 복구</b><span>처음 참여할 때 선택한 ${loginName} 방식으로 다시 로그인하면 기존 기록을 불러옵니다.</span></div>
+      <div class="info-row"><b>경품 확인</b><span>운영 안내소에서 참가번호 ${participantId}를 보여주세요.</span></div>
+      <div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>`;
+  }
+  document.getElementById('sheetBackdrop').classList.add('open');document.getElementById('placeSheet').classList.add('open');
+}
+function showRecoveryHelp(){
+  if(participationMode==='qr') showToast('개인 QR 카드를 다시 스캔하면 기존 도장판을 불러옵니다.');
+  else showToast('처음 선택한 로그인 방식으로 다시 로그인해 주세요.');
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)
+}
+
+let entryStartedAt=Number(safeStorage.getItem('dadepo_entry_started_at')||Date.now());
+safeStorage.setItem('dadepo_entry_started_at',String(entryStartedAt));
+let entryHistory=['entry-method'];
+function logExperimentEvent(type,data={}){
+  const key='dadepo_experiment_events';
+  const events=JSON.parse(safeStorage.getItem(key)||'[]');
+  events.push({type,at:new Date().toISOString(),...data});
+  safeStorage.setItem(key,JSON.stringify(events.slice(-300)));
+}
+function setEntryStep(id,push=true){
+  document.querySelectorAll('.entry-step').forEach(s=>s.classList.toggle('active',s.id===id));
+  if(push&&entryHistory[entryHistory.length-1]!==id)entryHistory.push(id);
+  const back=document.getElementById('entryBack');
+  if(back)back.hidden=id==='entry-method';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function entryBack(){
+  if(entryHistory.length<=1){setEntryStep('entry-method',false);return}
+  entryHistory.pop();
+  setEntryStep(entryHistory[entryHistory.length-1],false);
+}
+function selectEntryMethod(method){
+  logExperimentEvent('participation_method_selected',{method,selection_ms:Date.now()-entryStartedAt});
+  if(method==='qr')setEntryStep('entry-qr'); else setEntryStep('entry-login-method');
+}
+function connectDemoQr(){document.getElementById('personalQrInput').value='P-001';connectPersonalQr()}
+function connectPersonalQr(){
+  const input=document.getElementById('personalQrInput');
+  let code=String(input.value||'').trim().toUpperCase();
+  if(!/^P-\d{3}$/.test(code)){alert('참가번호를 P-001 형식으로 입력해 주세요.');input.focus();return}
+  logExperimentEvent('personal_qr_connected',{participant_id:code});
+  finishEntry(code,'qr','');
+}
+function openIdAuth(mode){setEntryStep('entry-id-auth');switchAuthTab(mode)}
+function switchAuthTab(mode){
+  document.getElementById('signupTab').classList.toggle('active',mode==='signup');
+  document.getElementById('loginTab').classList.toggle('active',mode==='login');
+  document.getElementById('signupPanel').classList.toggle('active',mode==='signup');
+  document.getElementById('loginPanel').classList.toggle('active',mode==='login');
+  const title=document.querySelector('#entry-id-auth .entry-title');
+  const desc=document.querySelector('#entry-id-auth .entry-desc');
+  if(mode==='signup'){title.innerHTML='간단한 계정을<br>만들어 주세요';desc.textContent='이름·전화번호·이메일 없이 아이디와 비밀번호만 사용합니다.'}
+  else{title.innerHTML='기존 계정으로<br>다시 참여하세요';desc.textContent='가입할 때 만든 아이디와 비밀번호를 입력하면 기존 기록을 불러옵니다.'}
+}
+function togglePassword(id,button){const input=document.getElementById(id);const show=input.type==='password';input.type=show?'text':'password';button.textContent=show?'숨김':'보기'}
+function nextMemberId(prefix='M-I'){
+  const key='dadepo_member_sequence';
+  const n=Number(safeStorage.getItem(key)||0)+1;
+  safeStorage.setItem(key,String(n));
+  return `${prefix}${String(n).padStart(3,'0')}`;
+}
+function completeSocialLogin(provider){
+  logExperimentEvent('login_method_selected',{provider});
+  if(provider==='google'){googleLogin();return;}
+  // 카카오는 시제품용 데모 로그인 유지
+  const key=`dadepo_${provider}_participant`;
+  const existing=safeStorage.getItem(key);
+  const pid=existing||nextMemberId('M-K');
+  safeStorage.setItem(key,pid);
+  logExperimentEvent('social_login_completed',{provider,participant_id:pid});
+  finishEntry(pid,'account',provider);
+}
+// 구글 실제 OAuth (Firebase Auth 팝업)
+function googleLogin(){
+  firebase.auth().signInWithPopup(googleProvider).then(res=>{
+    const uid=res.user.uid;
+    // 같은 구글 계정 → 항상 같은 참가번호(M-G###). (이 기기 기준 매핑)
+    const map=JSON.parse(safeStorage.getItem('dadepo_google_map')||'{}');
+    let pid=map[uid];
+    if(!pid){pid=nextMemberId('M-G');map[uid]=pid;safeStorage.setItem('dadepo_google_map',JSON.stringify(map));}
+    logExperimentEvent('social_login_completed',{provider:'google',participant_id:pid});
+    finishEntry(pid,'account','google');
+  }).catch(err=>{
+    const code=err&&err.code;
+    if(code==='auth/popup-closed-by-user'||code==='auth/cancelled-popup-request')return;
+    console.error(err);
+    alert('구글 로그인에 실패했습니다. 다시 시도해 주세요.');
+  });
+}
+function getDemoAccounts(){return JSON.parse(safeStorage.getItem('dadepo_demo_accounts')||'{}')}
+function saveDemoAccounts(accounts){safeStorage.setItem('dadepo_demo_accounts',JSON.stringify(accounts))}
+function signupWithId(){
+  const id=document.getElementById('signupId').value.trim().toLowerCase();
+  const pw=document.getElementById('signupPw').value;
+  const confirmPw=document.getElementById('signupPwConfirm').value;
+  const consent=document.getElementById('signupConsent').checked;
+  const error=document.getElementById('signupError');error.textContent='';
+  if(!/^[a-z0-9]{4,16}$/.test(id)){error.textContent='아이디는 영문 소문자와 숫자 4~16자로 입력해 주세요.';return}
+  if(pw.length<8){error.textContent='비밀번호는 8자 이상 입력해 주세요.';return}
+  if(pw!==confirmPw){error.textContent='비밀번호 확인이 일치하지 않습니다.';logExperimentEvent('password_mismatch');return}
+  if(!consent){error.textContent='필수 이용 안내에 동의해 주세요.';return}
+  const accounts=getDemoAccounts();
+  if(accounts[id]){error.textContent='이미 사용 중인 아이디입니다.';logExperimentEvent('username_duplicate');return}
+  const pid=nextMemberId('M-I');
+  accounts[id]={password:pw,participantId:pid,createdAt:new Date().toISOString()};
+  saveDemoAccounts(accounts);
+  logExperimentEvent('id_signup_completed',{participant_id:pid});
+  finishEntry(pid,'account','id');
+}
+function loginWithId(){
+  const id=document.getElementById('loginId').value.trim().toLowerCase();
+  const pw=document.getElementById('loginPw').value;
+  const error=document.getElementById('loginError');error.textContent='';
+  const account=getDemoAccounts()[id];
+  if(!account||account.password!==pw){error.textContent='아이디 또는 비밀번호를 확인해 주세요.';logExperimentEvent('id_login_failed');return}
+  logExperimentEvent('id_login_completed',{participant_id:account.participantId});
+  finishEntry(account.participantId,'account','id');
+}
+function finishEntry(pid,mode,auth){
+  switchParticipant(pid,mode,auth);
+  safeStorage.setItem('dadepo_entry_complete','1');
+  safeStorage.setItem('dadepo_entry_completed_at',new Date().toISOString());
+  document.getElementById('entryShell').hidden=true;
+  document.getElementById('mainApp').hidden=false;
+  renderPlaces();renderSchedule('now');renderStampUI();
+  goPage('home');
+  logExperimentEvent('festival_home_entered',{participant_id:pid,mode,auth_method:auth||null});
+}
+function resetTestFlow(){
+  const confirmed=window.confirm('현재 테스트 데이터를 모두 삭제하고 참여 방식 선택 화면부터 다시 시작할까요?\n\n개인 QR 연결, 로그인 상태, 도장 기록, 임시 아이디 계정이 함께 초기화됩니다.');
+  if(!confirmed)return;
+  stopScanner();
+  closeSheet();
+
+  // 이 사이트에서 사용하는 테스트 키만 삭제합니다.
+  try{
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(key&&key.startsWith('dadepo_'))keys.push(key);
+    }
+    keys.forEach(key=>localStorage.removeItem(key));
+  }catch(e){
+    if(typeof safeStorage.clear==='function')safeStorage.clear();
+  }
+
+  participantId='P-001';
+  participationMode='qr';
+  authMethod='';
+  stampStorageKey='dadepo_stamp_demo_P-001';
+  stampRecords=[];
+  entryStartedAt=Date.now();
+  safeStorage.setItem('dadepo_entry_started_at',String(entryStartedAt));
+  entryHistory=['entry-method'];
+
+  // 입력 폼과 오류 상태도 초기화합니다.
+  document.querySelectorAll('#entryShell input').forEach(input=>{
+    if(input.type==='checkbox')input.checked=false;
+    else input.value=input.id==='personalQrInput'?'P-001':'';
+  });
+  document.querySelectorAll('.field-error').forEach(el=>el.textContent='');
+  document.querySelectorAll('.pw-toggle').forEach(button=>button.textContent='보기');
+  ['signupPw','signupPwConfirm','loginPw'].forEach(id=>{const input=document.getElementById(id);if(input)input.type='password'});
+  switchAuthTab('signup');
+
+  document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id==='home'));
+  document.querySelectorAll('.nav-item').forEach(item=>item.classList.toggle('active',item.dataset.page==='home'));
+  document.getElementById('mainApp').hidden=true;
+  document.getElementById('entryShell').hidden=false;
+  setEntryStep('entry-method',false);
+  history.replaceState(null,'',location.pathname);
+  logExperimentEvent('test_flow_reset');
+}
+
+function initializeEntryFlow(){
+  if(queryParams.get('reset')==='1'){
+    ['dadepo_entry_complete','dadepo_participant_id','dadepo_participation_mode','dadepo_auth_method'].forEach(k=>safeStorage.removeItem(k));
+  }
+  // 1) QR 전용 URL(?participant=…)로 접속 → 즉시 자동 로그인
+  if(urlParticipant){
+    switchParticipant(urlParticipant,'qr','');
+    safeStorage.setItem('dadepo_entry_complete','1');
+    safeStorage.setItem('dadepo_entry_completed_at',new Date().toISOString());
+    // 주소창에서 쿼리 파라미터 제거 (?participant=… → 깔끔한 주소)
+    history.replaceState(null,'',location.pathname);
+    document.getElementById('entryShell').hidden=true;
+    document.getElementById('mainApp').hidden=false;
+    logExperimentEvent('qr_url_login',{participant_id:urlParticipant});
+    return;
+  }
+  // 2) 파라미터가 없어도 기존 로그인 기록이 있으면 자동 로그인
+  const completed=safeStorage.getItem('dadepo_entry_complete')==='1';
+  if(completed){
+    document.getElementById('entryShell').hidden=true;
+    document.getElementById('mainApp').hidden=false;
+  }else{
+    // 3) 아무 기록도 없으면 참여 방식 선택 화면
+    document.getElementById('entryShell').hidden=false;
+    document.getElementById('mainApp').hidden=true;
+    logExperimentEvent('participation_entry_viewed');
+  }
+}
+initializeEntryFlow();
+
+renderPlaces();renderSchedule('now');renderStampUI();
+
+// ── [기능3-C] 게시된 배치도의 부스를 도장 목록으로 사용 + 지도 클릭 연동 ──
+var TYPE_EMOJI={booth:'🎪',boothL:'🎪',stage:'🎤',food:'🍢',toilet:'🚻',parking:'🅿️',tent:'⛺',hq:'🏢',medical:'✚',entrance:'🚪'};
+var TYPE_CATEGORY={food:'먹거리',booth:'체험·판매',boothL:'체험·판매',stage:'무대',toilet:'편의시설',parking:'편의시설',tent:'편의시설',hq:'편의시설',medical:'편의시설',entrance:'편의시설'};
+var placesByElId={}; // 요소 id → 도장 코드
+function buildPlacesFromProject(project){
+  var out={}; placesByElId={}; var seq=0;
+  ((project&&project.elements)||[]).forEach(function(el){
+    if(el.shape!=='rect'&&el.shape!=='point') return; // 부스류(사각형/포인트)만 도장 대상
+    if(el.visible===false) return;
+    var code=String(el.code||'').trim().toUpperCase();
+    if(!code){ do{ seq++; code='D-'+String(seq).padStart(3,'0'); }while(out[code]); } // 코드 없으면 자동 부여
+    else { while(out[code]){ seq++; code=code+'-'+seq; } } // 수동코드 중복 방지
+    out[code]={name:el.name||code,category:TYPE_CATEGORY[el.type]||'행사 부스',emoji:TYPE_EMOJI[el.type]||'📍',summary:el.description||'',hours:'',info:el.description||'행사 배치도에 등록된 부스입니다.',contact:'-',stampable:true,code:code};
+    if(el.id) placesByElId[el.id]=code;
+  });
+  return out;
+}
+function applyPublishedPlaces(project){
+  var built=buildPlacesFromProject(project);
+  if(!Object.keys(built).length) return; // 코드 있는 부스가 없으면 기존 데모 목록 유지
+  places=built;
+  REQUIRED_STAMPS=Object.keys(built).length;
+  stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
+  renderPlaces();renderStampUI();
+}
+try{
+  firebase.firestore().doc('layouts/main').onSnapshot(function(snap){ if(snap.exists) applyPublishedPlaces(snap.data()); });
+}catch(e){ console.error('layout load',e); }
+
+// 지도(iframe)에서 부스 클릭 메시지 수신 → 해당 부스 시트 열기
+window.addEventListener('message',function(e){
+  var d=e&&e.data; if(!d||d.source!=='saegim-view') return;
+  var code=String(d.code||'').trim().toUpperCase();
+  var key=(code&&places[code])?code:(d.id&&placesByElId[d.id]);
+  goPage('map');
+  if(key&&places[key]){ openPlace(key); return; }
+  document.getElementById('sheetContent').innerHTML='<div class="sheet-hero">📍</div><h3>'+(d.name||'요소')+'</h3><div class="sub">이 요소는 도장 대상이 아닙니다.</div><div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>';
+  document.getElementById('sheetBackdrop').classList.add('open');
+  document.getElementById('placeSheet').classList.add('open');
+});
+</script>
+</body>
+</html>
