@@ -682,6 +682,22 @@
       body.map-mode .app{padding-top:0}
       .map-list-panel{bottom:calc(104px + env(safe-area-inset-bottom))}
     }
+    /* 임시 부스 카드 (지도 대체) */
+    .booth-grid{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#eef3fa,#e7eef7)}
+    .booth-grid:not(.is-positioned){display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:132px 14px calc(120px + env(safe-area-inset-bottom));align-content:start}
+    .booth-grid.is-positioned{display:block;padding:0}
+    .booth-canvas{position:relative;width:100%;min-height:100%}
+    .booth-road{position:absolute;left:50%;transform:translateX(-50%);top:110px;bottom:64px;width:6px;background:rgba(51,65,85,.5);border-radius:4px}
+    .booth-abs{position:absolute;transform:translate(-50%,-50%);width:118px;min-height:0;padding:12px 10px}
+    .booth-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:112px;justify-content:center;padding:16px 10px;border:1px solid #dbe4ef;border-radius:18px;background:#fff;box-shadow:0 6px 16px rgba(40,80,120,.08);text-align:center;transition:transform .12s ease,box-shadow .12s ease}
+    .booth-card:active{transform:scale(.97)}
+    .booth-card.is-active{border-color:#2f6fdb;box-shadow:0 0 0 2px rgba(47,111,219,.25)}
+    .booth-card.is-done{background:#eafaf0;border-color:#bfe8cd}
+    .booth-badge{position:relative;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:19px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+    .booth-check{position:absolute;right:-6px;bottom:-6px;width:18px;height:18px;border-radius:50%;background:#22a860;color:#fff;font-size:11px;display:grid;place-items:center;border:2px solid #fff;font-style:normal}
+    .booth-name{font-size:14px;font-weight:800;color:#1f2b3a;line-height:1.25}
+    .booth-cat{font-size:11px;color:#7a8798;font-weight:600}
+    .booth-empty{grid-column:1/-1;text-align:center;color:#7a8798;font-size:13px;padding:40px 0}
 </style>
 </head>
 <body>
@@ -861,7 +877,6 @@
       <div class="map-page-shell">
         <div class="map-wrap">
           <div class="map" id="festivalMap">
-            <iframe src="https://saegim-garden.web.app/view?v=3" title="축제 배치도" allow="geolocation" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:18px;z-index:20"></iframe>
             <div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
             <span class="map-label" style="left:23px;top:176px">행사장 입구</span>
             <span class="map-label" style="right:34px;top:244px">먹거리 구역</span>
@@ -1638,47 +1653,6 @@ function initializeEntryFlow(){
 initializeEntryFlow();
 
 renderPlaces();renderSchedule('now');renderStampUI();
-
-// ── [기능3-C] 게시된 배치도의 부스를 도장 목록으로 사용 + 지도 클릭 연동 ──
-var TYPE_EMOJI={booth:'🎪',boothL:'🎪',stage:'🎤',food:'🍢',toilet:'🚻',parking:'🅿️',tent:'⛺',hq:'🏢',medical:'✚',entrance:'🚪'};
-var TYPE_CATEGORY={food:'먹거리',booth:'체험·판매',boothL:'체험·판매',stage:'무대',toilet:'편의시설',parking:'편의시설',tent:'편의시설',hq:'편의시설',medical:'편의시설',entrance:'편의시설'};
-var placesByElId={}; // 요소 id → 도장 코드
-function buildPlacesFromProject(project){
-  var out={}; placesByElId={}; var seq=0;
-  ((project&&project.elements)||[]).forEach(function(el){
-    if(el.shape!=='rect'&&el.shape!=='point') return; // 부스류(사각형/포인트)만 도장 대상
-    if(el.visible===false) return;
-    var code=String(el.code||'').trim().toUpperCase();
-    if(!code){ do{ seq++; code='D-'+String(seq).padStart(3,'0'); }while(out[code]); } // 코드 없으면 자동 부여
-    else { while(out[code]){ seq++; code=code+'-'+seq; } } // 수동코드 중복 방지
-    out[code]={name:el.name||code,category:TYPE_CATEGORY[el.type]||'행사 부스',emoji:TYPE_EMOJI[el.type]||'📍',summary:el.description||'',hours:'',info:el.description||'행사 배치도에 등록된 부스입니다.',contact:'-',stampable:true,code:code};
-    if(el.id) placesByElId[el.id]=code;
-  });
-  return out;
-}
-function applyPublishedPlaces(project){
-  var built=buildPlacesFromProject(project);
-  if(!Object.keys(built).length) return; // 코드 있는 부스가 없으면 기존 데모 목록 유지
-  places=built;
-  REQUIRED_STAMPS=Object.keys(built).length;
-  stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
-  renderPlaces();renderStampUI();
-}
-try{
-  firebase.firestore().doc('layouts/main').onSnapshot(function(snap){ if(snap.exists) applyPublishedPlaces(snap.data()); });
-}catch(e){ console.error('layout load',e); }
-
-// 지도(iframe)에서 부스 클릭 메시지 수신 → 해당 부스 시트 열기
-window.addEventListener('message',function(e){
-  var d=e&&e.data; if(!d||d.source!=='saegim-view') return;
-  var code=String(d.code||'').trim().toUpperCase();
-  var key=(code&&places[code])?code:(d.id&&placesByElId[d.id]);
-  goPage('map');
-  if(key&&places[key]){ openPlace(key); return; }
-  document.getElementById('sheetContent').innerHTML='<div class="sheet-hero">📍</div><h3>'+(d.name||'요소')+'</h3><div class="sub">이 요소는 도장 대상이 아닙니다.</div><div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>';
-  document.getElementById('sheetBackdrop').classList.add('open');
-  document.getElementById('placeSheet').classList.add('open');
-});
 </script>
 </body>
 </html>
