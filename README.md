@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 다대포 해변 맥주 축제 · 해변 가요제 모바일 앱
+
+공개 배포용 모바일 앱은 `hosting-festival` 폴더에 있습니다.
+
+- 로컬 확인: `cd hosting-festival && python -m http.server 8092`
+- Firebase Hosting 타깃: `festival` (`dadaepo-festival.web.app`)
+- 비로그인 QR 스탬프 설계: [`docs/festival-login-development-guide.md`](docs/festival-login-development-guide.md)
+
+명세서 기준 1차 참여 흐름은 로그인 화면 없이 Firebase 익명 인증으로 시작합니다. 실제 Firebase UID를 쓰려면 콘솔에서 `Authentication > Sign-in method > Anonymous`를 먼저 켜야 합니다.
+
 ## Getting Started
 
 First, run the development server:

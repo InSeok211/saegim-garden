@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12384f" />
+  <title>참가자 실시간 모니터</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260805-1" />
+</head>
+<body>
+  <main class="monitor-shell">
+    <header class="monitor-header">
+      <div>
+        <p class="eyebrow">Dadaepo QR Stamp</p>
+        <h1>참가자 실시간 모니터</h1>
+        <p class="desc">참가자가 비로그인 QR 스탬프를 시작하면 이 화면에 한 명씩 표시됩니다.</p>
+      </div>
+      <div class="actions">
+        <a class="ghost-btn" href="https://dadaepo-festival.web.app/">참가자 앱</a>
+        <button id="loginBtn" class="primary-btn" type="button">Google 로그인</button>
+        <button id="logoutBtn" class="ghost-btn" type="button" hidden>로그아웃</button>
+      </div>
+    </header>
+
+    <section class="status-band">
+      <article>
+        <span>연결 상태</span>
+        <strong id="connectionText">로그인이 필요합니다</strong>
+      </article>
+      <article>
+        <span>총 참가자</span>
+        <strong id="totalText">0명</strong>
+      </article>
+      <article>
+        <span>완주자</span>
+        <strong id="completedText">0명</strong>
+      </article>
+      <article>
+        <span>최근 참가</span>
+        <strong id="latestText">-</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Firestore</p>
+          <h2>events/dadaepo-beer-2026/participants</h2>
+        </div>
+        <span id="adminEmail" class="email-pill">관리자 미확인</span>
+      </div>
+      <div id="participantList" class="participant-list">
+        <div class="empty">Google 로그인 후 참가자 목록을 불러옵니다.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="admin-monitor.js?v=20260805-1"></script>
+</body>
+</html>

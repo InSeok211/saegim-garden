@@ -9,9 +9,14 @@ const firebaseConfig={
 };
 try{firebase.initializeApp(firebaseConfig)}catch(e){}
 const googleProvider=new firebase.auth.GoogleAuthProvider();
+const auth=firebase.auth();
+const db=firebase.firestore();
+const cloudFunctions=firebase.app().functions('asia-northeast3');
+const EVENT_ID='dadaepo-beer-2026';
+const participantPersistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(() => {});
 
 let places={
-  stage:{name:'메인 무대',category:'편의시설',emoji:'🎤',summary:'가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 시민 노래자랑 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false},
+  stage:{name:'메인 무대',category:'편의시설',emoji:'🎤',summary:'해변 가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 해변 가요제 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false},
   food1:{name:'바다어묵',category:'먹거리',emoji:'🍢',summary:'따뜻한 부산 어묵과 음료를 판매하는 참여 점포',hours:'16:00–21:30',info:'대표 메뉴: 꼬치어묵, 물떡, 어묵국물',contact:'현장 주문',stampable:true,code:'DADAE-001'},
   shop1:{name:'다대포 기념공방',category:'체험·판매',emoji:'🎁',summary:'바다 테마 기념품과 간단한 만들기 체험',hours:'16:00–20:30',info:'판매: 키링, 엽서, 축제 기념 배지',contact:'인스타그램·현장 문의',stampable:true,code:'DADAE-002'},
   food2:{name:'바다 간식 부스',category:'먹거리',emoji:'🍧',summary:'시원한 음료와 축제 간식을 판매하는 참여 부스',hours:'16:00–21:30',info:'대표 메뉴: 슬러시, 아이스크림, 음료',contact:'현장 주문',stampable:true,code:'DADAE-003'},
@@ -29,19 +34,37 @@ const safeStorage=(()=>{
 const queryParams=new URLSearchParams(location.search);
 // QR 자동 로그인 식별자: ?participant= / ?id= / ?login= 지원
 const urlParticipant=(queryParams.get('participant')||queryParams.get('id')||queryParams.get('login')||'').trim()||null;
-let participantId=urlParticipant||safeStorage.getItem('dadepo_participant_id')||'P-001';
-let participationMode=safeStorage.getItem('dadepo_participation_mode')||'qr';
+let participantId=urlParticipant||safeStorage.getItem('festival.participantCode')||safeStorage.getItem('dadepo_participant_id')||'발급 중';
+let participationMode=safeStorage.getItem('dadepo_participation_mode')||'anonymous';
 let authMethod=safeStorage.getItem('dadepo_auth_method')||'';
+let currentUserUid=safeStorage.getItem('festival.uid')||safeStorage.getItem('dadepo_auth_uid')||'';
 let stampStorageKey=`dadepo_stamp_demo_${participantId}`;
 let stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
-function saveStampRecords(){safeStorage.setItem(stampStorageKey,JSON.stringify(stampRecords))}
+function saveStampRecords(){
+  safeStorage.setItem(stampStorageKey,JSON.stringify(stampRecords));
+  if(participationMode==='account'&&currentUserUid&&!currentUserUid.startsWith('local-')){
+    db.collection('festivalParticipants').doc(participantId).set({
+      participantId,
+      userUid:currentUserUid,
+      authMethod,
+      records:stampRecords,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).catch(err=>console.warn('stamp sync failed',err));
+  }
+}
 function switchParticipant(nextId,mode,auth=''){
   participantId=nextId;
   participationMode=mode;
   authMethod=auth;
   safeStorage.setItem('dadepo_participant_id',participantId);
+  safeStorage.setItem('festival.participantCode',participantId);
   safeStorage.setItem('dadepo_participation_mode',participationMode);
   safeStorage.setItem('dadepo_auth_method',authMethod);
+  if(mode!=='account'&&mode!=='anonymous'){
+    currentUserUid='';
+    safeStorage.removeItem('dadepo_auth_uid');
+    safeStorage.removeItem('festival.uid');
+  }
   stampStorageKey=`dadepo_stamp_demo_${participantId}`;
   stampRecords=JSON.parse(safeStorage.getItem(stampStorageKey)||'[]');
 }
@@ -51,9 +74,9 @@ function stampablePlaces(){return Object.entries(places).filter(([_,p])=>p.stamp
 
 const schedules=[
   {time:'17:00',end:'17:30',title:'개막 안내 및 축하 공연',place:'메인 무대',status:'done',desc:'지역 예술팀의 개막 축하 무대'},
-  {time:'18:00',end:'18:30',title:'다대포 시민 노래자랑 1부',place:'메인 무대',status:'now',desc:'참가자 1부 경연'},
+  {time:'18:00',end:'18:30',title:'다대포 해변 가요제 1부',place:'메인 무대',status:'now',desc:'참가자 1부 경연'},
   {time:'18:40',end:'19:10',title:'초청 가수 공연',place:'메인 무대',status:'next',desc:'지역 초청 가수 특별 공연'},
-  {time:'19:20',end:'20:00',title:'다대포 시민 노래자랑 2부',place:'메인 무대',status:'next',desc:'참가자 2부 경연'},
+  {time:'19:20',end:'20:00',title:'다대포 해변 가요제 2부',place:'메인 무대',status:'next',desc:'참가자 2부 경연'},
   {time:'20:10',end:'20:40',title:'시상식과 폐막 공연',place:'메인 무대',status:'next',desc:'수상자 발표 및 피날레 무대'}
 ];
 
@@ -335,6 +358,37 @@ function addStamp(spotId){
   showStampSuccess(p);
 }
 
+async function addStamp(spotId){
+  const p=places[spotId];
+  if(!p||!p.stampable){showToast('도장 받을 장소가 아닙니다.');return}
+  if(hasStamp(spotId)){showToast('이미 받은 도장입니다.');renderStampUI();return}
+  try{
+    if(participationMode==='anonymous'&&currentUserUid&&!currentUserUid.startsWith('local-')){
+      document.getElementById('scanStatus').textContent='서버에서 도장을 확인하는 중입니다.';
+      const claimed=await claimStampOnServer(spotId);
+      if(claimed.alreadyClaimed){showToast('이미 받은 도장입니다.');await loadRemoteStampRecords();renderStampUI();return}
+    }else if(!allowLocalFallback()){
+      showToast('참가권 확인 후 다시 시도해 주세요.');
+      return;
+    }
+    stampRecords.push({spotId,stampedAt:new Date().toISOString()});
+    saveStampRecords();
+    renderStampUI();renderPlaces(currentFilter);
+    showStampSuccess(p);
+  }catch(err){
+    console.error(err);
+    if(allowLocalFallback()){
+      stampRecords.push({spotId,stampedAt:new Date().toISOString()});
+      saveStampRecords();
+      renderStampUI();renderPlaces(currentFilter);
+      showStampSuccess(p);
+      return;
+    }
+    document.getElementById('scanStatus').textContent='도장을 저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.';
+    showToast('도장을 저장하지 못했습니다.');
+  }
+}
+
 function showStampSuccess(p){
   document.getElementById('sheetContent').innerHTML=`
     <div class="sheet-hero">${p.emoji}</div><h3>도장이 찍혔어요!</h3>
@@ -373,7 +427,7 @@ function renderStampUI(){
   const txt=document.getElementById('stampProgressText');if(txt)txt.textContent=`${count} / ${REQUIRED_STAMPS}개 완료`;
   const chip=document.getElementById('rewardChip');if(chip)chip.textContent=count>=REQUIRED_STAMPS?'경품 수령 가능':'미션 진행 중';
   const pid=document.getElementById('participantIdText');if(pid)pid.textContent=participantId;
-  const methodLabel=participationMode==='qr'?'개인 QR 카드':authMethod==='kakao'?'카카오 로그인':authMethod==='google'?'Google 로그인':'아이디 로그인';
+  const methodLabel=participationMode==='anonymous'?'비로그인 QR 참여':participationMode==='qr'?'개인 QR 카드':authMethod==='kakao'?'카카오 로그인':authMethod==='google'?'Google 로그인':'아이디 로그인';
   const homeLabel=document.getElementById('homeParticipantLabel');if(homeLabel)homeLabel.textContent=`${methodLabel} · ${participantId}`;
   const typeText=document.getElementById('participantTypeText');if(typeText)typeText.textContent=methodLabel;
   const desc=document.getElementById('stampPageDescription');if(desc)desc.textContent=participationMode==='qr'?'개인 QR 카드에 점포·부스 방문 도장이 저장됩니다.':'로그인 계정에 점포·부스 방문 도장이 저장됩니다.';
@@ -388,13 +442,13 @@ function renderStampUI(){
 }
 
 function showPersonalQr(){
-  if(participationMode==='qr'){
+  if(participationMode==='qr'||participationMode==='anonymous'){
     document.getElementById('sheetContent').innerHTML=`
       <div class="personal-qr-visual"><i class="personal-qr-third"></i></div>
-      <h3 style="text-align:center">나의 개인 QR</h3><div class="sub" style="text-align:center">참가번호 ${participantId}</div>
-      <div class="info-row"><b>참여 방식</b><span>사전 발급 개인 QR 카드</span></div>
-      <div class="info-row"><b>역할</b><span>기존 도장판을 다시 불러오고 경품 수령 시 참가자를 확인합니다.</span></div>
-      <div class="info-row"><b>주의</b><span>다른 사람에게 공유하면 같은 도장판에 접근할 수 있습니다.</span></div>
+      <h3 style="text-align:center">나의 참가 정보</h3><div class="sub" style="text-align:center">참가번호 ${participantId}</div>
+      <div class="info-row"><b>참여 방식</b><span>${participationMode==='anonymous'?'비로그인 QR 스탬프':'사전 발급 개인 QR 카드'}</span></div>
+      <div class="info-row"><b>역할</b><span>경품 수령 시 참가자를 확인하고 기존 도장판을 찾는 보조 번호입니다.</span></div>
+      <div class="info-row"><b>주의</b><span>처음 시작한 브라우저에서 계속 이용해 주세요.</span></div>
       <div class="sheet-actions"><button class="btn" onclick="closeSheet()">닫기</button><button class="btn primary" onclick="showToast('실서비스에서는 개인 QR 이미지를 저장합니다.')">QR 저장</button></div>`;
   }else{
     const loginName=authMethod==='kakao'?'카카오':authMethod==='google'?'Google':'아이디·비밀번호';
@@ -408,7 +462,8 @@ function showPersonalQr(){
   document.getElementById('sheetBackdrop').classList.add('open');document.getElementById('placeSheet').classList.add('open');
 }
 function showRecoveryHelp(){
-  if(participationMode==='qr') showToast('개인 QR 카드를 다시 스캔하면 기존 도장판을 불러옵니다.');
+  if(participationMode==='anonymous') showToast('처음 참여한 브라우저에서 다시 접속하면 기존 도장판을 불러옵니다.');
+  else if(participationMode==='qr') showToast('개인 QR 카드를 다시 스캔하면 기존 도장판을 불러옵니다.');
   else showToast('처음 선택한 로그인 방식으로 다시 로그인해 주세요.');
 }
 
@@ -425,6 +480,178 @@ function logExperimentEvent(type,data={}){
   const events=JSON.parse(safeStorage.getItem(key)||'[]');
   events.push({type,at:new Date().toISOString(),...data});
   safeStorage.setItem(key,JSON.stringify(events.slice(-300)));
+}
+function setEntryStatus(message){
+  const status=document.getElementById('entryStartStatus');
+  if(status)status.textContent=message;
+}
+function getPersistentRequestId(){
+  const key='festival.pendingRequestId';
+  let requestId=safeStorage.getItem(key);
+  if(!requestId){
+    requestId=(window.crypto&&window.crypto.randomUUID)?window.crypto.randomUUID():`req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    safeStorage.setItem(key,requestId);
+  }
+  return requestId;
+}
+function participantCodeFromUid(uid){
+  return `A${parseInt(hashText(uid).slice(0,6),36).toString().padStart(5,'0').slice(0,5)}`;
+}
+function allowLocalFallback(){
+  return ['localhost','127.0.0.1'].includes(location.hostname)||queryParams.get('devFallback')==='1';
+}
+async function ensureAnonymousUser(){
+  await participantPersistenceReady;
+  const existing=auth.currentUser;
+  if(existing&&existing.isAnonymous)return {uid:existing.uid,localOnly:false};
+  try{
+    const result=await auth.signInAnonymously();
+    return {uid:result.user.uid,localOnly:false};
+  }catch(err){
+    console.warn('anonymous auth failed',err);
+    if(!allowLocalFallback()){
+      setEntryStatus('요청이 많아 잠시 후 다시 시도해 주세요. 같은 휴대폰에서 반복 테스트 중이면 몇 분 뒤 다시 눌러주세요.');
+      throw err;
+    }
+    const key='festival.localAnonymousUid';
+    let uid=safeStorage.getItem(key);
+    if(!uid){
+      uid=`local-${hashText(`${Date.now()}-${Math.random()}`)}`;
+      safeStorage.setItem(key,uid);
+    }
+    setEntryStatus('Firebase 익명 로그인이 아직 꺼져 있어 로컬 개발용 참가권으로 시작합니다.');
+    return {uid,localOnly:true,error:err};
+  }
+}
+async function registerAnonymousParticipant(uid,requestId,localOnly=false){
+  const cached=safeStorage.getItem('festival.participantCode');
+  if(cached&&cached!=='발급 중')return cached;
+  if(localOnly){
+    const participantCode=participantCodeFromUid(uid);
+    safeStorage.setItem('festival.participantCode',participantCode);
+    safeStorage.setItem('festival.eventId',EVENT_ID);
+    safeStorage.removeItem('festival.pendingRequestId');
+    return participantCode;
+  }
+
+  let participantCode='';
+  try{
+    const registerParticipant=cloudFunctions.httpsCallable('registerParticipant');
+    const result=await registerParticipant({eventId:EVENT_ID,requestId});
+    participantCode=result&&result.data&&result.data.participantCode;
+  }catch(err){
+    console.warn('registerParticipant function failed',err);
+    if(!allowLocalFallback())throw err;
+    participantCode=participantCodeFromUid(uid);
+  }
+  if(!participantCode)throw new Error('registerParticipant returned no participantCode');
+  safeStorage.setItem('festival.participantCode',participantCode);
+  safeStorage.setItem('festival.eventId',EVENT_ID);
+  safeStorage.removeItem('festival.pendingRequestId');
+  return participantCode;
+}
+function getStampRequestId(spotId){
+  const key=`festival.stampRequest.${spotId}`;
+  let requestId=safeStorage.getItem(key);
+  if(!requestId){
+    requestId=(window.crypto&&window.crypto.randomUUID)?window.crypto.randomUUID():`stamp-${spotId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    safeStorage.setItem(key,requestId);
+  }
+  return requestId;
+}
+async function claimStampOnServer(spotId){
+  const p=places[spotId];
+  const requestId=getStampRequestId(spotId);
+  const claimStamp=cloudFunctions.httpsCallable('claimStamp');
+  const result=await claimStamp({eventId:EVENT_ID,pointId:spotId,code:p.code,requestId});
+  safeStorage.removeItem(`festival.stampRequest.${spotId}`);
+  return result&&result.data?result.data:{};
+}
+async function startAnonymousEntry(){
+  const button=document.getElementById('startStampTourBtn');
+  if(button)button.disabled=true;
+  setEntryStatus('익명 참가권을 확인하는 중입니다.');
+  try{
+    const requestId=getPersistentRequestId();
+    const user=await ensureAnonymousUser();
+    currentUserUid=user.uid;
+    safeStorage.setItem('festival.uid',currentUserUid);
+    safeStorage.setItem('dadepo_auth_uid',currentUserUid);
+    setEntryStatus('참가번호를 준비하는 중입니다. 스탬프판은 바로 열립니다.');
+    const code=await registerAnonymousParticipant(user.uid,requestId,user.localOnly);
+    const preview=document.getElementById('entryPreviewCode');
+    if(preview)preview.textContent=`참가번호 ${code}`;
+    logExperimentEvent('anonymous_entry_started',{eventId:EVENT_ID,participant_id:code,local_only:Boolean(user.localOnly)});
+    finishEntry(code,'anonymous','anonymous');
+  }catch(err){
+    console.error(err);
+    setEntryStatus('시작하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.');
+    if(button)button.disabled=false;
+  }
+}
+function idToEmail(id){return `${id}@dadaepo-festival.local`}
+function hashText(text){
+  let hash=2166136261;
+  for(let i=0;i<text.length;i++){
+    hash^=text.charCodeAt(i);
+    hash=Math.imul(hash,16777619);
+  }
+  return (hash>>>0).toString(36).toUpperCase().padStart(6,'0').slice(0,6);
+}
+function participantFromUid(uid,auth){
+  const prefix=auth==='google'?'M-G':auth==='id'?'M-I':'M-A';
+  return `${prefix}-${hashText(uid)}`;
+}
+function mergeStampRecords(remoteRecords=[]){
+  const merged=new Map();
+  [...stampRecords,...remoteRecords].forEach(record=>{
+    if(!record||!record.spotId)return;
+    const current=merged.get(record.spotId);
+    if(!current||String(record.stampedAt||'')<String(current.stampedAt||''))merged.set(record.spotId,record);
+  });
+  stampRecords=[...merged.values()].sort((a,b)=>String(a.stampedAt||'').localeCompare(String(b.stampedAt||'')));
+  safeStorage.setItem(stampStorageKey,JSON.stringify(stampRecords));
+}
+async function ensureFirebaseParticipant(user,method,loginId=''){
+  const profileRef=db.collection('festivalUsers').doc(user.uid);
+  const profile=await profileRef.get();
+  let participant=profile.exists&&profile.data().participantId;
+  if(!participant)participant=participantFromUid(user.uid,method);
+  const profileData={
+    uid:user.uid,
+    participantId:participant,
+    authMethod:method,
+    loginId:loginId||null,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if(!profile.exists)profileData.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+  await profileRef.set(profileData,{merge:true});
+  currentUserUid=user.uid;
+  safeStorage.setItem('dadepo_auth_uid',currentUserUid);
+  return participant;
+}
+async function loadRemoteStampRecords(){
+  if((participationMode!=='account'&&participationMode!=='anonymous')||!currentUserUid||currentUserUid.startsWith('local-'))return;
+  try{
+    if(participationMode==='anonymous'){
+      const snap=await db.collection('events').doc(EVENT_ID).collection('participants').doc(currentUserUid).collection('stamps').get();
+      if(!snap.empty){
+        mergeStampRecords(snap.docs.map(doc=>({spotId:doc.id,stampedAt:doc.data().claimedAt||new Date().toISOString()})));
+        renderStampUI();
+        renderPlaces(currentFilter);
+      }
+      return;
+    }
+    const snap=await db.collection('festivalParticipants').doc(participantId).get();
+    if(snap.exists&&Array.isArray(snap.data().records)){
+      mergeStampRecords(snap.data().records);
+      renderStampUI();
+      renderPlaces(currentFilter);
+    }
+  }catch(err){
+    console.warn('stamp load failed',err);
+    showToast('온라인 기록을 불러오지 못해 이 기기 기록으로 시작합니다.');
+  }
 }
 function setEntryStep(id,push=true){
   document.querySelectorAll('.entry-step').forEach(s=>s.classList.toggle('active',s.id===id));
@@ -452,6 +679,7 @@ function connectPersonalQr(){
 }
 function openIdAuth(mode){setEntryStep('entry-id-auth');switchAuthTab(mode)}
 function switchAuthTab(mode){
+  if(!document.getElementById('signupTab'))return;
   document.getElementById('signupTab').classList.toggle('active',mode==='signup');
   document.getElementById('loginTab').classList.toggle('active',mode==='login');
   document.getElementById('signupPanel').classList.toggle('active',mode==='signup');
@@ -471,7 +699,7 @@ function nextMemberId(prefix='M-I'){
 function completeSocialLogin(provider){
   logExperimentEvent('login_method_selected',{provider});
   if(provider==='google'){googleLogin();return;}
-  // 카카오는 시제품용 데모 로그인 유지
+  // 카카오는 Firebase Auth 제공자 설정을 추가한 뒤 실제 로그인으로 연결합니다.
   const key=`dadepo_${provider}_participant`;
   const existing=safeStorage.getItem(key);
   const pid=existing||nextMemberId('M-K');
@@ -480,25 +708,20 @@ function completeSocialLogin(provider){
   finishEntry(pid,'account',provider);
 }
 // 구글 실제 OAuth (Firebase Auth 팝업)
-function googleLogin(){
-  firebase.auth().signInWithPopup(googleProvider).then(res=>{
-    const uid=res.user.uid;
-    // 같은 구글 계정 → 항상 같은 참가번호(M-G###). (이 기기 기준 매핑)
-    const map=JSON.parse(safeStorage.getItem('dadepo_google_map')||'{}');
-    let pid=map[uid];
-    if(!pid){pid=nextMemberId('M-G');map[uid]=pid;safeStorage.setItem('dadepo_google_map',JSON.stringify(map));}
+async function googleLogin(){
+  try{
+    const res=await auth.signInWithPopup(googleProvider);
+    const pid=await ensureFirebaseParticipant(res.user,'google');
     logExperimentEvent('social_login_completed',{provider:'google',participant_id:pid});
     finishEntry(pid,'account','google');
-  }).catch(err=>{
+  }catch(err){
     const code=err&&err.code;
     if(code==='auth/popup-closed-by-user'||code==='auth/cancelled-popup-request')return;
     console.error(err);
     alert('구글 로그인에 실패했습니다. 다시 시도해 주세요.');
-  });
+  }
 }
-function getDemoAccounts(){return JSON.parse(safeStorage.getItem('dadepo_demo_accounts')||'{}')}
-function saveDemoAccounts(accounts){safeStorage.setItem('dadepo_demo_accounts',JSON.stringify(accounts))}
-function signupWithId(){
+async function signupWithId(){
   const id=document.getElementById('signupId').value.trim().toLowerCase();
   const pw=document.getElementById('signupPw').value;
   const confirmPw=document.getElementById('signupPwConfirm').value;
@@ -508,22 +731,36 @@ function signupWithId(){
   if(pw.length<8){error.textContent='비밀번호는 8자 이상 입력해 주세요.';return}
   if(pw!==confirmPw){error.textContent='비밀번호 확인이 일치하지 않습니다.';logExperimentEvent('password_mismatch');return}
   if(!consent){error.textContent='필수 이용 안내에 동의해 주세요.';return}
-  const accounts=getDemoAccounts();
-  if(accounts[id]){error.textContent='이미 사용 중인 아이디입니다.';logExperimentEvent('username_duplicate');return}
-  const pid=nextMemberId('M-I');
-  accounts[id]={password:pw,participantId:pid,createdAt:new Date().toISOString()};
-  saveDemoAccounts(accounts);
-  logExperimentEvent('id_signup_completed',{participant_id:pid});
-  finishEntry(pid,'account','id');
+  error.textContent='계정을 만드는 중입니다.';
+  try{
+    const res=await auth.createUserWithEmailAndPassword(idToEmail(id),pw);
+    const pid=await ensureFirebaseParticipant(res.user,'id',id);
+    logExperimentEvent('id_signup_completed',{participant_id:pid});
+    finishEntry(pid,'account','id');
+  }catch(err){
+    console.error(err);
+    if(err&&err.code==='auth/email-already-in-use'){error.textContent='이미 사용 중인 아이디입니다.';logExperimentEvent('username_duplicate');return}
+    if(err&&err.code==='auth/operation-not-allowed'){error.textContent='Firebase 콘솔에서 이메일/비밀번호 로그인을 먼저 켜야 합니다.';return}
+    error.textContent='회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+  }
 }
-function loginWithId(){
+async function loginWithId(){
   const id=document.getElementById('loginId').value.trim().toLowerCase();
   const pw=document.getElementById('loginPw').value;
   const error=document.getElementById('loginError');error.textContent='';
-  const account=getDemoAccounts()[id];
-  if(!account||account.password!==pw){error.textContent='아이디 또는 비밀번호를 확인해 주세요.';logExperimentEvent('id_login_failed');return}
-  logExperimentEvent('id_login_completed',{participant_id:account.participantId});
-  finishEntry(account.participantId,'account','id');
+  if(!/^[a-z0-9]{4,16}$/.test(id)){error.textContent='아이디를 확인해 주세요.';return}
+  if(!pw){error.textContent='비밀번호를 입력해 주세요.';return}
+  error.textContent='로그인 확인 중입니다.';
+  try{
+    const res=await auth.signInWithEmailAndPassword(idToEmail(id),pw);
+    const pid=await ensureFirebaseParticipant(res.user,'id',id);
+    logExperimentEvent('id_login_completed',{participant_id:pid});
+    finishEntry(pid,'account','id');
+  }catch(err){
+    console.error(err);
+    error.textContent='아이디 또는 비밀번호를 확인해 주세요.';
+    logExperimentEvent('id_login_failed');
+  }
 }
 function finishEntry(pid,mode,auth){
   switchParticipant(pid,mode,auth);
@@ -532,6 +769,7 @@ function finishEntry(pid,mode,auth){
   document.getElementById('entryShell').hidden=true;
   document.getElementById('mainApp').hidden=false;
   renderPlaces();renderSchedule('now');renderStampUI();
+  loadRemoteStampRecords();
   goPage('home');
   logExperimentEvent('festival_home_entered',{participant_id:pid,mode,auth_method:auth||null});
 }
@@ -540,23 +778,25 @@ function resetTestFlow(){
   if(!confirmed)return;
   stopScanner();
   closeSheet();
+  auth.signOut().catch(err=>console.warn('sign out failed',err));
 
   // 이 사이트에서 사용하는 테스트 키만 삭제합니다.
   try{
     const keys=[];
     for(let i=0;i<localStorage.length;i++){
       const key=localStorage.key(i);
-      if(key&&key.startsWith('dadepo_'))keys.push(key);
+      if(key&&(key.startsWith('dadepo_')||key.startsWith('festival.')))keys.push(key);
     }
     keys.forEach(key=>localStorage.removeItem(key));
   }catch(e){
     if(typeof safeStorage.clear==='function')safeStorage.clear();
   }
 
-  participantId='P-001';
-  participationMode='qr';
+  participantId='발급 중';
+  participationMode='anonymous';
   authMethod='';
-  stampStorageKey='dadepo_stamp_demo_P-001';
+  currentUserUid='';
+  stampStorageKey='dadepo_stamp_demo_pending';
   stampRecords=[];
   entryStartedAt=Date.now();
   safeStorage.setItem('dadepo_entry_started_at',String(entryStartedAt));
@@ -583,7 +823,7 @@ function resetTestFlow(){
 
 function initializeEntryFlow(){
   if(queryParams.get('reset')==='1'){
-    ['dadepo_entry_complete','dadepo_participant_id','dadepo_participation_mode','dadepo_auth_method'].forEach(k=>safeStorage.removeItem(k));
+    ['dadepo_entry_complete','dadepo_participant_id','dadepo_participation_mode','dadepo_auth_method','festival.participantCode','festival.uid','festival.pendingRequestId'].forEach(k=>safeStorage.removeItem(k));
   }
   // 1) QR 전용 URL(?participant=…)로 접속 → 즉시 자동 로그인
   if(urlParticipant){
@@ -612,3 +852,11 @@ function initializeEntryFlow(){
 initializeEntryFlow();
 
 renderPlaces();renderSchedule('now');renderStampUI();
+auth.onAuthStateChanged(user=>{
+  if(user&&(participationMode==='account'||participationMode==='anonymous')){
+    currentUserUid=user.uid;
+    safeStorage.setItem('dadepo_auth_uid',currentUserUid);
+    safeStorage.setItem('festival.uid',currentUserUid);
+    loadRemoteStampRecords();
+  }
+});

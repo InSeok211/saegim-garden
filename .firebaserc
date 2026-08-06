@@ -5,9 +5,17 @@
   "targets": {
     "saegim-garden": {
       "hosting": {
-        "app": ["saegim-garden"],
-        "festival": ["dadaepo-festival"]
+        "app": [
+          "saegim-garden"
+        ],
+        "festival": [
+          "dadaepo-festival"
+        ],
+        "monitor": [
+          "saegim-qr"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }
