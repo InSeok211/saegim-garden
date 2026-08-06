@@ -20,9 +20,21 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
 
+      // 실시간 공지 방송 (모니터 페이지가 로그인 없이 발송/조회)
+      match /broadcast/{docId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      // 행사 일정 (모니터 페이지가 로그인 없이 등록/수정/삭제)
+      match /schedule/{itemId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
       match /participants/{uid} {
         allow get: if isOwner(uid) || isAdmin();
-        allow list: if isAdmin();
+        allow list: if true;
         allow create, update: if false;
         allow delete: if false;
 

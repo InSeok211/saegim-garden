@@ -18,15 +18,13 @@
       </div>
       <div class="actions">
         <a class="ghost-btn" href="https://dadaepo-festival.web.app/">참가자 앱</a>
-        <button id="loginBtn" class="primary-btn" type="button">Google 로그인</button>
-        <button id="logoutBtn" class="ghost-btn" type="button" hidden>로그아웃</button>
       </div>
     </header>
 
     <section class="status-band">
       <article>
         <span>연결 상태</span>
-        <strong id="connectionText">로그인이 필요합니다</strong>
+        <strong id="connectionText">연결 중</strong>
       </article>
       <article>
         <span>총 참가자</span>
@@ -42,22 +40,106 @@
       </article>
     </section>
 
+    <section class="panel broadcast-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Live Broadcast</p>
+          <h2>실시간 알림 방송</h2>
+          <p class="desc" style="margin-top:6px">공지를 여러 건 만들어 두고 필요할 때 활성화/비활성화할 수 있습니다. 활성 공지는 참가자 앱 홈과 공지함에 실시간으로 반영됩니다.</p>
+        </div>
+        <span id="broadcastState" class="email-pill">연결 중</span>
+      </div>
+      <div class="broadcast-grid">
+        <label class="bc-field">
+          <span>유형</span>
+          <select id="bcType">
+            <option value="urgent">긴급 공지</option>
+            <option value="info">안내</option>
+            <option value="safety">안전 안내</option>
+          </select>
+        </label>
+        <label class="bc-field">
+          <span>제목 · 홈 배너에 표시</span>
+          <input id="bcTitle" type="text" maxlength="80" placeholder="예: 우천으로 공연이 30분 지연됩니다" />
+        </label>
+        <label class="bc-field bc-full">
+          <span>상세 내용 · 공지함에 표시</span>
+          <textarea id="bcBody" rows="3" maxlength="500" placeholder="참가자에게 전달할 자세한 안내를 입력하세요."></textarea>
+        </label>
+      </div>
+      <div class="broadcast-actions">
+        <button id="bcSubmitBtn" class="primary-btn" type="button">새 공지 발송</button>
+        <button id="bcResetBtn" class="ghost-btn" type="button" hidden>새로 작성</button>
+      </div>
+      <p id="bcStatus" class="bc-status"></p>
+
+      <div class="broadcast-list-head"><h3>공지 목록</h3></div>
+      <div id="bcList" class="broadcast-list">
+        <div class="empty">아직 만든 공지가 없습니다.</div>
+      </div>
+    </section>
+
+    <section class="panel schedule-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Live Schedule</p>
+          <h2>행사 일정 관리</h2>
+          <p class="desc" style="margin-top:6px">여기서 등록한 일정은 참가자 앱 '일정' 탭에 실시간으로 반영됩니다. 예정·진행 중·완료 상태는 입력한 시간을 기준으로 자동으로 판정됩니다.</p>
+        </div>
+        <span id="scheduleState" class="email-pill">연결 중</span>
+      </div>
+      <div class="schedule-form-grid">
+        <label class="bc-field">
+          <span>날짜</span>
+          <input id="schDate" type="date" />
+        </label>
+        <label class="bc-field">
+          <span>시작 시간 (24시간제)</span>
+          <input id="schTime" type="text" inputmode="numeric" maxlength="5" placeholder="18:00" />
+        </label>
+        <label class="bc-field">
+          <span>종료 시간 (24시간제)</span>
+          <input id="schEnd" type="text" inputmode="numeric" maxlength="5" placeholder="18:30" />
+        </label>
+        <label class="bc-field">
+          <span>장소</span>
+          <input id="schPlace" type="text" maxlength="40" placeholder="메인 무대" />
+        </label>
+        <label class="bc-field bc-full">
+          <span>제목</span>
+          <input id="schTitle" type="text" maxlength="60" placeholder="예: 다대포 해변 가요제 1부" />
+        </label>
+        <label class="bc-field bc-full">
+          <span>설명</span>
+          <textarea id="schDesc" rows="2" maxlength="200" placeholder="참가자에게 보여줄 짧은 설명"></textarea>
+        </label>
+      </div>
+      <div class="broadcast-actions">
+        <button id="schSubmitBtn" class="primary-btn" type="button">일정 추가</button>
+        <button id="schResetBtn" class="ghost-btn" type="button" hidden>새로 작성</button>
+      </div>
+      <p id="schMsg" class="bc-status"></p>
+
+      <div class="broadcast-list-head"><h3>일정 목록</h3></div>
+      <div id="schList" class="broadcast-list">
+        <div class="empty">아직 등록된 일정이 없습니다.</div>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">Firestore</p>
           <h2>events/dadaepo-beer-2026/participants</h2>
         </div>
-        <span id="adminEmail" class="email-pill">관리자 미확인</span>
       </div>
       <div id="participantList" class="participant-list">
-        <div class="empty">Google 로그인 후 참가자 목록을 불러옵니다.</div>
+        <div class="empty">참가자 목록을 불러오는 중입니다.</div>
       </div>
     </section>
   </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="admin-monitor.js?v=20260805-1"></script>
 </body>

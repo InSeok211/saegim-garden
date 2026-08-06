@@ -12,12 +12,12 @@
   "hosting": [
     {
       "target": "app",
-      "public": "out",
+      "public": "hosting-editor",
       "cleanUrls": true,
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "headers": [
         {
-          "source": "**/*.html",
+          "source": "**/*.@(html|css|js)",
           "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
         }
       ]

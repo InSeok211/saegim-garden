@@ -72,13 +72,7 @@ function hasStamp(spotId){return stampRecords.some(r=>r.spotId===spotId)}
 function stampablePlaces(){return Object.entries(places).filter(([_,p])=>p.stampable).slice(0,REQUIRED_STAMPS)}
 
 
-const schedules=[
-  {time:'17:00',end:'17:30',title:'개막 안내 및 축하 공연',place:'메인 무대',status:'done',desc:'지역 예술팀의 개막 축하 무대'},
-  {time:'18:00',end:'18:30',title:'다대포 해변 가요제 1부',place:'메인 무대',status:'now',desc:'참가자 1부 경연'},
-  {time:'18:40',end:'19:10',title:'초청 가수 공연',place:'메인 무대',status:'next',desc:'지역 초청 가수 특별 공연'},
-  {time:'19:20',end:'20:00',title:'다대포 해변 가요제 2부',place:'메인 무대',status:'next',desc:'참가자 2부 경연'},
-  {time:'20:10',end:'20:40',title:'시상식과 폐막 공연',place:'메인 무대',status:'next',desc:'수상자 발표 및 피날레 무대'}
-];
+let schedules=[]; // 운영본부 모니터에서 실시간으로 채워짐
 
 function goPage(id,navEl){
   if(id!=='scan') stopScanner();
@@ -229,16 +223,32 @@ function openPlace(id,pinEl){
   document.getElementById('sheetBackdrop').classList.add('open');
   document.getElementById('placeSheet').classList.add('open');
 }
+function noticeCardHtml(n){
+  const t=NOTICE_TYPE[n.type]||NOTICE_TYPE.urgent;
+  const when=(n.updatedAt&&n.updatedAt.toDate)?n.updatedAt.toDate().toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+  const body=escapeHtml(n.body||'').replace(/\n/g,'<br>');
+  return `<article class="notice-feed-item"><div class="notice-feed-head"><span class="notice-feed-badge${n.type&&n.type!=='urgent'?' '+n.type:''}">${t.emoji} ${t.label}</span>${when?`<span class="notice-feed-time">${when}</span>`:''}</div><strong>${escapeHtml(n.title||t.label)}</strong>${body?`<p>${body}</p>`:''}</article>`;
+}
 function openNotice(){
-  document.getElementById('sheetContent').innerHTML=`
-    <div class="sheet-hero">📢</div>
-    <h3>축제 공지</h3><div class="sub">축제 당일 변경 사항과 주요 안내</div>
-    <div class="info-row"><b>긴급</b><span>현장 상황에 따라 공연 시간이 변경될 수 있습니다. 변경 시 이 화면에서 즉시 안내합니다.</span></div>
-    <div class="info-row"><b>주차</b><span>행사장 주변이 혼잡할 수 있으니 대중교통 이용을 권장합니다.</span></div>
-    <div class="info-row"><b>안전</b><span>응급 상황은 112 또는 현장 운영 안내소로 연락하세요.</span></div>
-    <div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>`;
+  const c=document.getElementById('sheetContent');
+  if(liveNotices.length){
+    c.innerHTML=`
+      <div class="sheet-hero">📢</div>
+      <h3>축제 공지</h3><div class="sub">현재 활성 공지 ${liveNotices.length}건</div>
+      <div class="notice-feed">${liveNotices.map(noticeCardHtml).join('')}</div>
+      <div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>`;
+  }else{
+    c.innerHTML=`
+      <div class="sheet-hero">📢</div>
+      <h3>축제 공지</h3><div class="sub">축제 당일 변경 사항과 주요 안내</div>
+      <div class="info-row"><b>긴급</b><span>현장 상황에 따라 공연 시간이 변경될 수 있습니다. 변경 시 이 화면에서 즉시 안내합니다.</span></div>
+      <div class="info-row"><b>주차</b><span>행사장 주변이 혼잡할 수 있으니 대중교통 이용을 권장합니다.</span></div>
+      <div class="info-row"><b>안전</b><span>응급 상황은 112 또는 현장 운영 안내소로 연락하세요.</span></div>
+      <div class="sheet-actions"><button class="btn primary" style="grid-column:1/-1" onclick="closeSheet()">확인</button></div>`;
+  }
   document.getElementById('sheetBackdrop').classList.add('open');
   document.getElementById('placeSheet').classList.add('open');
+  markNoticeSeen();
 }
 function closeSheet(){
   document.getElementById('sheetBackdrop').classList.remove('open');
@@ -246,11 +256,31 @@ function closeSheet(){
   document.querySelectorAll('.pin').forEach(x=>x.classList.remove('active'));
 }
 function focusPin(id){setTimeout(()=>selectMapPlace(id,document.querySelector(`#festivalMap .pin[data-id=\"${id}\"]`)),180)}
-function renderSchedule(mode='now',el){
+function formatScheduleDate(dateStr){
+  if(!dateStr)return'';
+  const d=new Date(`${dateStr}T00:00:00`);
+  if(Number.isNaN(d.getTime()))return'';
+  const week=['일','월','화','수','목','금','토'][d.getDay()];
+  return `${d.getMonth()+1}.${d.getDate()}(${week})`;
+}
+function computeScheduleStatus(dateStr,timeStr,endStr){
+  const start=new Date(`${dateStr}T${timeStr}:00`);
+  const end=new Date(`${dateStr}T${endStr}:00`);
+  if(Number.isNaN(start.getTime())||Number.isNaN(end.getTime()))return'next';
+  if(end<=start)end.setDate(end.getDate()+1); // 자정을 넘기는 일정 보정
+  const now=new Date();
+  if(now<start)return'next';
+  if(now>end)return'done';
+  return'now';
+}
+let currentScheduleMode='now';
+function renderSchedule(mode=currentScheduleMode,el){
+  currentScheduleMode=mode;
   if(el){document.querySelectorAll('.schedule-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
-  let rows=mode==='all'?schedules:schedules.filter(s=>s.status===mode);
-  if(!rows.length&&mode==='now')rows=schedules.filter(s=>s.status==='next').slice(0,1);
-  document.getElementById('scheduleList').innerHTML=rows.map(s=>`<article class="schedule-card ${s.status==='now'?'now':''}"><div class="time-box"><strong>${s.time}</strong><span>~ ${s.end}</span></div><div><h4>${s.title}</h4><p>${s.desc}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${s.place}</button>${s.status==='now'?'<span class="status-badge">진행 중</span>':s.status==='next'?'<span class="status-badge">예정</span>':''}</div></div></article>`).join('');
+  const withStatus=schedules.map(s=>({...s,_status:computeScheduleStatus(s.date,s.time,s.end)}));
+  let rows=mode==='all'?withStatus:withStatus.filter(s=>s._status===mode);
+  if(!rows.length&&mode==='now')rows=withStatus.filter(s=>s._status==='next').slice(0,1);
+  document.getElementById('scheduleList').innerHTML=rows.length?rows.map(s=>`<article class="schedule-card ${s._status==='now'?'now':''}"><div class="time-box">${s.date?`<small class="schedule-date">${escapeHtml(formatScheduleDate(s.date))}</small>`:''}<strong>${escapeHtml(s.time)}</strong><span>~ ${escapeHtml(s.end)}</span></div><div><h4>${escapeHtml(s.title)}</h4><p>${escapeHtml(s.desc||'')}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${escapeHtml(s.place||'')}</button>${s._status==='now'?'<span class="status-badge">진행 중</span>':s._status==='next'?'<span class="status-badge">예정</span>':''}</div></div></article>`).join(''):`<div class="stamp-empty">아직 등록된 일정이 없습니다.</div>`;
 }
 
 let qrStream=null, qrScanTimer=null, qrDetector=null, lastQrValue='';
@@ -860,3 +890,63 @@ auth.onAuthStateChanged(user=>{
     loadRemoteStampRecords();
   }
 });
+
+// ===== 운영본부 실시간 공지 방송 수신 (여러 건) =====
+const NOTICE_TYPE={urgent:{label:'긴급 공지',emoji:'📢'},info:{label:'안내',emoji:'ℹ️'},safety:{label:'안전 안내',emoji:'🦺'}};
+let liveNotices=[]; // 활성 공지만, 최신순
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function seenNoticeIds(){try{return new Set(JSON.parse(safeStorage.getItem('festival.seenNoticeIds')||'[]'))}catch(e){return new Set()}}
+function unseenNotices(){const seen=seenNoticeIds();return liveNotices.filter(n=>!seen.has(n.id))}
+function markNoticeSeen(){
+  const seen=seenNoticeIds();
+  liveNotices.forEach(n=>seen.add(n.id));
+  safeStorage.setItem('festival.seenNoticeIds',JSON.stringify([...seen].slice(-100)));
+  updateNoticeDot();
+}
+function updateNoticeDot(){
+  const dot=document.querySelector('.notice-dot');
+  if(dot)dot.style.display=unseenNotices().length?'block':'none';
+}
+function applyLiveNotices(){
+  const strong=document.querySelector('.home-alert strong');
+  const badge=document.querySelector('.home-alert .alert-badge');
+  if(liveNotices.length){
+    const latest=liveNotices[0];
+    const t=NOTICE_TYPE[latest.type]||NOTICE_TYPE.urgent;
+    if(strong)strong.textContent=latest.title||t.label;
+    if(badge)badge.textContent=liveNotices.length>1?`공지 ${liveNotices.length}건`:t.label;
+  }else{
+    if(strong)strong.textContent='현장 상황에 따라 공연 시간이 변경될 수 있습니다.';
+    if(badge)badge.textContent='긴급 공지';
+  }
+  updateNoticeDot();
+}
+applyLiveNotices(); // Firestore 수신 전에도 기본 상태(공지 없음)로 정규화
+try{
+  db.collection('events').doc(EVENT_ID).collection('broadcast').orderBy('createdAt','desc').onSnapshot(snap=>{
+    liveNotices=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(n=>n.active);
+    applyLiveNotices();
+    // 앱을 켜 둔 참가자에게 아직 못 본 공지를 즉시 팝업으로 노출
+    const appVisible=!document.getElementById('mainApp').hidden;
+    const unseen=unseenNotices();
+    if(appVisible&&unseen.length){
+      if(unseen.length===1){
+        const t=NOTICE_TYPE[unseen[0].type]||NOTICE_TYPE.urgent;
+        showToast(`${t.emoji} 새 공지: ${unseen[0].title||t.label}`);
+      }else{
+        showToast(`📢 새 공지 ${unseen.length}건 도착`);
+      }
+      openNotice();
+    }
+  },err=>console.warn('notice listen failed',err));
+}catch(e){console.warn('notice subscribe failed',e)}
+
+// ===== 운영본부 실시간 일정 관리 수신 =====
+try{
+  db.collection('events').doc(EVENT_ID).collection('schedule').onSnapshot(snap=>{
+    schedules=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+    schedules.sort((a,b)=>`${a.date||''}${a.time||''}`.localeCompare(`${b.date||''}${b.time||''}`));
+    renderSchedule(currentScheduleMode);
+  },err=>console.warn('schedule listen failed',err));
+}catch(e){console.warn('schedule subscribe failed',e)}
+setInterval(()=>{if(!document.getElementById('mainApp').hidden)renderSchedule(currentScheduleMode)},30000); // 시간 경과에 따라 상태 자동 갱신
