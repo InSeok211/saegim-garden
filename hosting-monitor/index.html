@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12384f" />
   <title>참가자 실시간 모니터</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="admin-monitor.css?v=20260805-1" />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260807-2" />
 </head>
 <body>
   <main class="monitor-shell">
@@ -137,10 +137,26 @@
         <div class="empty">참가자 목록을 불러오는 중입니다.</div>
       </div>
     </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Booth Stats</p>
+          <h2>부스별 · 참가자별 이용 현황</h2>
+        </div>
+        <span id="boothStatsState" class="email-pill">연결 중</span>
+      </div>
+      <div id="boothStatsBody">
+        <h3 style="margin:0 0 10px;font-size:15px;">부스별 이용 수</h3>
+        <div id="boothCountList" class="participant-list" style="margin-bottom:22px;"></div>
+        <h3 style="margin:0 0 10px;font-size:15px;">참가자별 이용 부스</h3>
+        <div id="participantBoothList" class="participant-list"></div>
+      </div>
+    </section>
   </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-  <script src="admin-monitor.js?v=20260805-1"></script>
+  <script src="admin-monitor.js?v=20260807-2"></script>
 </body>
 </html>

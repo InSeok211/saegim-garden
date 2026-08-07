@@ -39,7 +39,7 @@ service cloud.firestore {
         allow delete: if false;
 
         match /stamps/{pointId} {
-          allow get, list: if isOwner(uid) || isAdmin();
+          allow get, list: if true;
           allow create, update: if false;
           allow delete: if false;
         }
@@ -53,6 +53,13 @@ service cloud.firestore {
       match /rewards/{rewardId} {
         allow read, write: if false;
       }
+    }
+
+    // 부스별 이용 통계용 collectionGroup('stamps') 조회 허용
+    // (중첩 match만으로는 collectionGroup 쿼리에 규칙이 적용되지 않아 최상위 재귀 와일드카드로 별도 선언)
+    match /{path=**}/stamps/{pointId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     match /systemCounters/{document=**} {

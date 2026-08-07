@@ -16,6 +16,16 @@
   const db = firebase.firestore();
   const $ = (id) => document.getElementById(id);
   let unsubscribe = null;
+  let latestParticipants = [];
+
+  // 부스 목록 — functions/index.js STAMP_POINTS와 동일하게 유지
+  const BOOTH_POINTS = {
+    food1: "바다어묵",
+    shop1: "다대포 기념공방",
+    food2: "바다 간식 부스",
+    experience1: "해변 공예 체험",
+    info: "운영 안내소",
+  };
 
   function setConnection(text) {
     $("connectionText").textContent = text;
@@ -30,6 +40,7 @@
 
   function renderRows(snapshot) {
     const docs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    latestParticipants = docs;
     $("totalText").textContent = `${docs.length}명`;
     $("completedText").textContent = `${docs.filter((item) => item.completed).length}명`;
     $("latestText").textContent = docs[0] ? (docs[0].participantCode || docs[0].id.slice(0, 8)) : "-";
@@ -45,6 +56,69 @@
           </article>
         `).join("")
       : `<div class="empty">아직 참가자 문서가 없습니다. 참가자 앱에서 스탬프 투어를 시작하면 여기에 표시됩니다.</div>`;
+    renderBoothPanels();
+  }
+
+  // ===== 부스별 · 참가자별 이용 현황 =====
+  let boothStatsUnsub = null;
+  let latestStampDocs = []; // [{ uid, pointId, pointName, claimedAt }]
+
+  function renderBoothPanels() {
+    const countByPoint = new Map(Object.keys(BOOTH_POINTS).map((id) => [id, 0]));
+    const boothsByUid = new Map();
+    latestStampDocs.forEach((stamp) => {
+      countByPoint.set(stamp.pointId, (countByPoint.get(stamp.pointId) || 0) + 1);
+      if (!boothsByUid.has(stamp.uid)) boothsByUid.set(stamp.uid, []);
+      boothsByUid.get(stamp.uid).push(stamp);
+    });
+
+    const boothRows = Array.from(countByPoint.entries())
+      .map(([pointId, count]) => ({ pointId, name: BOOTH_POINTS[pointId] || pointId, count }))
+      .sort((a, b) => b.count - a.count);
+
+    $("boothCountList").innerHTML = boothRows.map((row) => `
+        <article class="participant-row" style="grid-template-columns: minmax(0,1fr) 120px;">
+          <strong>${escapeHtml(row.name)}</strong>
+          <span class="stamp-chip">${row.count}명 이용</span>
+        </article>
+      `).join("");
+
+    $("participantBoothList").innerHTML = latestParticipants.length
+      ? latestParticipants.map((item) => {
+          const stamps = boothsByUid.get(item.uid || item.id) || [];
+          const chips = stamps.length
+            ? stamps.map((s) => `<span class="stamp-chip">${escapeHtml(BOOTH_POINTS[s.pointId] || s.pointName || s.pointId)}</span>`).join("")
+            : `<span class="time-text">이용한 부스 없음</span>`;
+          return `
+            <article class="participant-row" style="grid-template-columns: 130px minmax(0,1fr);">
+              <strong>${item.participantCode || "발급 전"}</strong>
+              <span style="display:flex;gap:6px;flex-wrap:wrap;">${chips}</span>
+            </article>
+          `;
+        }).join("")
+      : `<div class="empty">아직 참가자 문서가 없습니다.</div>`;
+  }
+
+  function subscribeBoothStats() {
+    if (boothStatsUnsub) boothStatsUnsub();
+    $("boothStatsState").textContent = "실시간 수신 중";
+    boothStatsUnsub = db.collectionGroup("stamps").onSnapshot(
+      (snapshot) => {
+        latestStampDocs = snapshot.docs.map((doc) => ({
+          uid: doc.ref.parent.parent.id,
+          pointId: doc.data().pointId,
+          pointName: doc.data().pointName,
+          claimedAt: doc.data().claimedAt,
+        }));
+        renderBoothPanels();
+      },
+      (error) => {
+        console.error(error);
+        $("boothStatsState").textContent = "오류";
+        $("boothCountList").innerHTML = `<div class="empty">${error.message}</div>`;
+        $("participantBoothList").innerHTML = "";
+      },
+    );
   }
 
   function subscribeParticipants() {
@@ -365,6 +439,7 @@
   window.addEventListener("DOMContentLoaded", () => {
     subscribeParticipants();
     subscribeNotices();
+    subscribeBoothStats();
     $("bcSubmitBtn").addEventListener("click", submitNotice);
     $("bcResetBtn").addEventListener("click", resetForm);
     $("bcList").addEventListener("click", (event) => {

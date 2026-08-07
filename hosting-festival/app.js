@@ -284,6 +284,27 @@ function renderSchedule(mode=currentScheduleMode,el){
 }
 
 let qrStream=null, qrScanTimer=null, qrDetector=null, lastQrValue='';
+let qrCanvas=null, qrCanvasCtx=null;
+
+function hasNativeDetector(){return 'BarcodeDetector' in window}
+
+// iOS Safari(및 iOS의 모든 브라우저)는 BarcodeDetector를 지원하지 않으므로
+// jsQR(순수 JS 디코더)로 캔버스 프레임을 직접 분석하는 폴백을 사용한다.
+async function detectQrFromVideo(video){
+  if(hasNativeDetector()){
+    qrDetector=qrDetector||new BarcodeDetector({formats:['qr_code']});
+    const codes=await qrDetector.detect(video);
+    return codes.length?(codes[0].rawValue||''):null;
+  }
+  if(typeof jsQR==='undefined'||!video.videoWidth||!video.videoHeight)return null;
+  if(!qrCanvas){qrCanvas=document.createElement('canvas');qrCanvasCtx=qrCanvas.getContext('2d',{willReadFrequently:true})}
+  qrCanvas.width=video.videoWidth;
+  qrCanvas.height=video.videoHeight;
+  qrCanvasCtx.drawImage(video,0,0,qrCanvas.width,qrCanvas.height);
+  const imageData=qrCanvasCtx.getImageData(0,0,qrCanvas.width,qrCanvas.height);
+  const result=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
+  return result?result.data:null;
+}
 
 async function startScanner(){
   const status=document.getElementById('scanStatus');
@@ -294,14 +315,13 @@ async function startScanner(){
     status.textContent='이 브라우저에서는 카메라를 사용할 수 없습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
     return;
   }
-  if(!('BarcodeDetector' in window)){
+  if(!hasNativeDetector()&&typeof jsQR==='undefined'){
     status.textContent='이 브라우저는 QR 자동 인식을 지원하지 않습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
     return;
   }
   try{
     stopScanner();
-    qrDetector=new BarcodeDetector({formats:['qr_code']});
-    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:720}},audio:false});
     video.srcObject=qrStream;
     await video.play();
     video.style.display='block';
@@ -318,11 +338,11 @@ async function startScanner(){
 
 async function scanVideoFrame(){
   const video=document.getElementById('qrVideo');
-  if(!qrStream||!qrDetector)return;
+  if(!qrStream)return;
   try{
-    const codes=await qrDetector.detect(video);
-    if(codes.length){
-      handleQrResult(codes[0].rawValue||'QR 코드 확인');
+    const value=await detectQrFromVideo(video);
+    if(value){
+      handleQrResult(value||'QR 코드 확인');
       return;
     }
   }catch(e){}
@@ -346,16 +366,28 @@ async function scanImageFile(input){
   const file=input.files&&input.files[0];
   const status=document.getElementById('scanStatus');
   if(!file)return;
-  if(!('BarcodeDetector' in window)){
+  if(!hasNativeDetector()&&typeof jsQR==='undefined'){
     status.textContent='현재 브라우저는 이미지 QR 인식을 지원하지 않습니다. 코드를 직접 입력해주세요.';
     input.value='';return;
   }
   try{
-    qrDetector=qrDetector||new BarcodeDetector({formats:['qr_code']});
     const bitmap=await createImageBitmap(file);
-    const codes=await qrDetector.detect(bitmap);
+    let value=null;
+    if(hasNativeDetector()){
+      qrDetector=qrDetector||new BarcodeDetector({formats:['qr_code']});
+      const codes=await qrDetector.detect(bitmap);
+      value=codes.length?(codes[0].rawValue||''):null;
+    }else{
+      const canvas=document.createElement('canvas');
+      canvas.width=bitmap.width;canvas.height=bitmap.height;
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(bitmap,0,0);
+      const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const result=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
+      value=result?result.data:null;
+    }
     bitmap.close();
-    if(codes.length)handleQrResult(codes[0].rawValue||'QR 코드 확인');
+    if(value)handleQrResult(value);
     else status.textContent='이미지에서 QR 코드를 찾지 못했습니다. QR이 선명한 사진으로 다시 시도해주세요.';
   }catch(err){status.textContent='이미지를 읽지 못했습니다. 다른 사진을 선택해주세요.'}
   input.value='';
