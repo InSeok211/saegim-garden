@@ -189,26 +189,17 @@
       <div class="scanner-workspace" id="scannerWorkspace">
         <div class="section-title"><h3>점포 QR 스캔</h3><button onclick="toggleScannerPanel(false)">닫기</button></div>
         <div class="scan-card">
-          <div class="scanner-view" id="scannerView">
+          <div class="scanner-view scan-start-surface" id="scannerView" role="button" tabindex="0" aria-label="QR 스캔 시작" onclick="handleScannerSurfaceTap()" onkeydown="handleScannerSurfaceKey(event)">
             <video id="qrVideo" playsinline muted></video>
             <div class="scanner-placeholder" id="scannerPlaceholder">
               <div class="camera-icon">▣</div>
-              <strong>점포 QR을 네모 안에 비춰주세요</strong>
-              <p>카메라 사용이 어려우면 저장된 QR 이미지나<br>점포 코드를 직접 입력할 수 있습니다.</p>
+              <strong>QR 스캔하려면 터치해주세요</strong>
+              <p>카메라가 켜지면<br>점포 QR을 화면 안에 맞춰주세요.</p>
             </div>
             <div class="scan-frame" id="scanFrame"></div>
           </div>
-          <p class="scan-status" id="scanStatus">아래 ‘카메라 시작’을 누르면 스캔을 시작합니다.</p>
-          <div class="scan-actions">
-            <button class="btn primary" id="startScanBtn" onclick="startScanner()">카메라 시작</button>
-            <label class="btn upload-btn">이미지 불러오기<input type="file" accept="image/*" capture="environment" onchange="scanImageFile(this)"></label>
-          </div>
+          <p class="scan-status" id="scanStatus">위 화면을 터치하면 카메라가 켜집니다.</p>
           <div class="qr-result" id="qrResult"><small>스캔 결과</small><strong id="qrResultText"></strong></div>
-        </div>
-        <div class="manual-scan">
-          <h3>점포 코드 직접 입력</h3>
-          <p>시제품 체험용 코드는 DADAE-001부터 DADAE-005까지입니다.</p>
-          <div class="manual-row"><input id="manualQrCode" placeholder="예: DADAE-001" autocomplete="off"><button onclick="submitManualCode()">도장 받기</button></div>
         </div>
       </div>
 

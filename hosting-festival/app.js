@@ -312,11 +312,11 @@ async function startScanner(){
   const placeholder=document.getElementById('scannerPlaceholder');
   const frame=document.getElementById('scanFrame');
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    status.textContent='이 브라우저에서는 카메라를 사용할 수 없습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
+    status.textContent='이 브라우저에서는 카메라를 사용할 수 없습니다. 다른 브라우저에서 다시 시도해 주세요.';
     return;
   }
   if(!hasNativeDetector()&&typeof jsQR==='undefined'){
-    status.textContent='이 브라우저는 QR 자동 인식을 지원하지 않습니다. 이미지 불러오기 또는 코드 입력을 이용하세요.';
+    status.textContent='이 브라우저는 QR 자동 인식을 지원하지 않습니다. 다른 브라우저에서 다시 시도해 주세요.';
     return;
   }
   try{
@@ -327,12 +327,24 @@ async function startScanner(){
     video.style.display='block';
     placeholder.style.display='none';
     frame.style.display='block';
-    status.textContent='QR 코드가 네모 안에 들어오도록 비춰주세요.';
-    document.getElementById('startScanBtn').textContent='■ 카메라 끄기';
-    document.getElementById('startScanBtn').onclick=stopScanner;
+    status.textContent='점포 QR을 화면 안에 맞추면 자동으로 인식됩니다.';
+    const scannerView=document.getElementById('scannerView');
+    if(scannerView)scannerView.setAttribute('aria-label','QR 스캔 중');
     scanVideoFrame();
   }catch(err){
-    status.textContent='카메라 권한을 확인해주세요. 로컬 파일에서는 제한될 수 있으며, HTTPS 배포 후 정상 작동합니다.';
+    status.textContent='카메라를 사용할 수 없어요. 브라우저 권한을 확인하거나 직원에게 문의해주세요.';
+  }
+}
+
+function handleScannerSurfaceTap(){
+  if(qrStream)return;
+  startScanner();
+}
+
+function handleScannerSurfaceKey(event){
+  if(event.key==='Enter'||event.key===' '){
+    event.preventDefault();
+    handleScannerSurfaceTap();
   }
 }
 
@@ -358,6 +370,8 @@ function stopScanner(){
   const frame=document.getElementById('scanFrame');
   if(placeholder)placeholder.style.display='block';
   if(frame)frame.style.display='none';
+  const scannerView=document.getElementById('scannerView');
+  if(scannerView)scannerView.setAttribute('aria-label','QR 스캔 시작');
   const btn=document.getElementById('startScanBtn');
   if(btn){btn.textContent='카메라 시작';btn.onclick=startScanner}
 }
