@@ -32,6 +32,12 @@ service cloud.firestore {
         allow write: if true;
       }
 
+      // 사용자 앱에 현재 노출할 행사 일차
+      match /settings/{settingId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
       match /participants/{uid} {
         allow get: if isOwner(uid) || isAdmin();
         allow list: if true;

@@ -35,6 +35,7 @@
           <div class="schedule-day-toolbar" id="scheduleDayToolbar" aria-label="관리할 행사 일차">
             <button class="active" type="button" data-day="1">1일차</button><button type="button" data-day="2">2일차</button><button type="button" data-day="3">3일차</button>
           </div>
+          <p class="schedule-active-day" id="scheduleActiveDayState">현재 사용자 화면에 배포된 일차를 확인하는 중입니다.</p>
           <div class="schedule-form-grid">
             <label class="bc-field"><span>행사 일차</span><select id="schDay"><option value="1">1일차</option><option value="2">2일차</option><option value="3">3일차</option></select></label>
             <label class="bc-field"><span>날짜</span><input id="schDate" type="date" /></label>
@@ -45,7 +46,7 @@
             <label class="bc-field bc-full"><span>설명</span><textarea id="schDesc" rows="2" maxlength="200" placeholder="참가자에게 보여줄 짧은 설명"></textarea></label>
             <label class="check-field bc-full"><input id="schPublished" type="checkbox" /><span>저장과 동시에 사용자 앱에 공개</span></label>
           </div>
-          <div class="broadcast-actions"><button id="schSubmitBtn" class="primary-btn" type="button">일정 저장</button><button id="schResetBtn" class="ghost-btn" type="button" hidden>새로 작성</button><button id="schPublishDayBtn" class="ghost-btn" type="button">1일차 전체 공개</button></div>
+          <div class="broadcast-actions"><button id="schSubmitBtn" class="primary-btn" type="button">일정 저장</button><button id="schResetBtn" class="ghost-btn" type="button" hidden>새로 작성</button><button id="schPublishDayBtn" class="ghost-btn" type="button">1일차 사용자 화면에 배포</button></div>
           <p id="schMsg" class="bc-status"></p>
           <div class="broadcast-list-head"><h3 id="scheduleListTitle">1일차 일정 목록</h3></div>
           <div id="schList" class="broadcast-list"><div class="empty">아직 등록된 일정이 없습니다.</div></div>
@@ -55,6 +56,6 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-  <script src="admin-monitor.js?v=20260831-schedule-days1"></script>
+  <script src="admin-monitor.js?v=20260831-schedule-publish2"></script>
 </body>
 </html>

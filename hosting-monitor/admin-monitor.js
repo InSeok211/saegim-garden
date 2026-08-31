@@ -836,11 +836,14 @@
   // ===== 행사 일정 관리 (상태는 입력한 시간으로 자동 판정) =====
   const STATUS_LABEL = { next: "예정", now: "진행 중", done: "완료" };
   const scheduleCol = db.collection("events").doc(EVENT_ID).collection("schedule");
+  const scheduleSettingsRef = db.collection("events").doc(EVENT_ID).collection("settings").doc("schedule");
   let scheduleUnsub = null;
+  let scheduleSettingsUnsub = null;
   let scheduleTickTimer = null;
   let editingScheduleId = null;
   let latestSchedule = [];
   let scheduleDayFilter = 1;
+  let activeScheduleDay = 1;
 
   function computeScheduleStatus(dateStr, timeStr, endStr) {
     const start = new Date(`${dateStr}T${timeStr}:00`);
@@ -916,7 +919,9 @@
       button.classList.toggle("active", Number(button.dataset.day) === scheduleDayFilter);
     });
     setText("scheduleListTitle", `${scheduleDayFilter}일차 일정 목록`);
-    setText("schPublishDayBtn", `${scheduleDayFilter}일차 전체 공개`);
+    setText("schPublishDayBtn", scheduleDayFilter === activeScheduleDay
+      ? `${scheduleDayFilter}일차 현재 배포 중`
+      : `${scheduleDayFilter}일차 사용자 화면에 배포`);
     if (has("schDay")) $("schDay").value = String(scheduleDayFilter);
     renderSchedule();
     if (reset) resetScheduleForm();
@@ -1026,6 +1031,19 @@
     }
   }
 
+  function subscribeScheduleSettings() {
+    if (!has("scheduleActiveDayState")) return;
+    if (scheduleSettingsUnsub) scheduleSettingsUnsub();
+    scheduleSettingsUnsub = scheduleSettingsRef.onSnapshot((doc) => {
+      activeScheduleDay = Math.max(1, Math.min(3, Number(doc.exists ? doc.data().activeDay : 1) || 1));
+      setText("scheduleActiveDayState", `현재 사용자 화면에는 ${activeScheduleDay}일차 일정이 표시됩니다.`);
+      setScheduleDay(scheduleDayFilter, false);
+    }, (error) => {
+      console.error(error);
+      setText("scheduleActiveDayState", "현재 배포 일차를 불러오지 못했습니다.");
+    });
+  }
+
   async function toggleSchedulePublished(id) {
     const item = latestSchedule.find((schedule) => schedule.id === id);
     if (!item) return;
@@ -1041,19 +1059,22 @@
 
   async function publishSelectedScheduleDay() {
     const rows = latestSchedule.filter((item) => Number(item.day || 1) === scheduleDayFilter && item.published === false);
-    if (!rows.length) {
-      schMsg(`${scheduleDayFilter}일차 일정은 모두 공개 중입니다.`, "ok");
-      return;
-    }
-    if (!window.confirm(`${scheduleDayFilter}일차 작성 중 일정 ${rows.length}건을 모두 공개할까요?`)) return;
+    const message = rows.length
+      ? `${scheduleDayFilter}일차 작성 중 일정 ${rows.length}건을 공개하고 사용자 화면을 이 일차로 전환할까요?`
+      : `사용자 화면을 ${scheduleDayFilter}일차 일정으로 전환할까요?`;
+    if (!window.confirm(message)) return;
     const batch = db.batch();
     rows.forEach((item) => batch.set(scheduleCol.doc(item.id), {
       published: true,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true }));
+    batch.set(scheduleSettingsRef, {
+      activeDay: scheduleDayFilter,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
     try {
       await batch.commit();
-      schMsg(`${scheduleDayFilter}일차 일정 ${rows.length}건을 공개했습니다.`, "ok");
+      schMsg(`${scheduleDayFilter}일차 일정을 사용자 화면에 배포했습니다.`, "ok");
     } catch (error) {
       console.error(error);
       schMsg("일차 공개 실패: " + error.message, "err");
@@ -1101,6 +1122,7 @@
 
     resetScheduleForm();
     subscribeSchedule();
+    subscribeScheduleSettings();
     if (scheduleTickTimer) clearInterval(scheduleTickTimer);
     if (has("schList")) {
       scheduleTickTimer = setInterval(() => renderSchedule(), 30000); // 시간 경과에 따라 상태 배지 자동 갱신

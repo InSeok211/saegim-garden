@@ -107,7 +107,7 @@ function goPage(id,navEl){
   window.scrollTo({top:0,behavior:id==='map'?'auto':'smooth'});
   if(id==='map') renderPlaces(currentFilter);
   if(id==='scan') renderStampUI();
-  if(id==='schedule'&&!document.querySelector('#scheduleList').children.length) renderSchedule(currentScheduleDay);
+  if(id==='schedule'&&!document.querySelector('#scheduleList').children.length) renderSchedule(currentScheduleMode);
 }
 
 let currentFilter='전체';
@@ -324,14 +324,16 @@ function computeScheduleStatus(dateStr,timeStr,endStr){
   if(now>end)return'done';
   return'now';
 }
-let currentScheduleDay=1;
-function renderSchedule(day=currentScheduleDay,el){
-  currentScheduleDay=Math.max(1,Math.min(3,Number(day)||1));
+let activeScheduleDay=1;
+let currentScheduleMode='next';
+function renderSchedule(mode=currentScheduleMode,el){
+  currentScheduleMode=['next','now','done'].includes(mode)?mode:'next';
   if(el){document.querySelectorAll('.schedule-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
   const rows=schedules
-    .filter(s=>s.published!==false&&Number(s.day||1)===currentScheduleDay)
-    .map(s=>({...s,_status:computeScheduleStatus(s.date,s.time,s.end)}));
-  document.getElementById('scheduleList').innerHTML=rows.length?rows.map(s=>`<article class="schedule-card ${s._status==='now'?'now':''}"><div class="time-box">${s.date?`<small class="schedule-date">${escapeHtml(formatScheduleDate(s.date))}</small>`:''}<strong>${escapeHtml(s.time)}</strong><span>~ ${escapeHtml(s.end)}</span></div><div><h4>${escapeHtml(s.title)}</h4><p>${escapeHtml(s.desc||'')}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${escapeHtml(s.place||'')}</button>${s._status==='now'?'<span class="status-badge">진행 중</span>':s._status==='next'?'<span class="status-badge">예정</span>':''}</div></div></article>`).join(''):`<div class="stamp-empty">아직 등록된 일정이 없습니다.</div>`;
+    .filter(s=>s.published!==false&&Number(s.day||1)===activeScheduleDay)
+    .map(s=>({...s,_status:computeScheduleStatus(s.date,s.time,s.end)}))
+    .filter(s=>s._status===currentScheduleMode);
+  document.getElementById('scheduleList').innerHTML=rows.length?rows.map(s=>`<article class="schedule-card ${s._status==='now'?'now':''}"><div class="time-box">${s.date?`<small class="schedule-date">${escapeHtml(formatScheduleDate(s.date))}</small>`:''}<strong>${escapeHtml(s.time)}</strong><span>~ ${escapeHtml(s.end)}</span></div><div><h4>${escapeHtml(s.title)}</h4><p>${escapeHtml(s.desc||'')}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${escapeHtml(s.place||'')}</button><span class="status-badge">${s._status==='now'?'진행 중':s._status==='next'?'예정':'완료'}</span></div></div></article>`).join(''):`<div class="stamp-empty">현재 배포된 ${activeScheduleDay}일차의 ${currentScheduleMode==='now'?'진행 중':currentScheduleMode==='next'?'예정':'완료'} 일정이 없습니다.</div>`;
 }
 
 let qrStream=null, qrScanTimer=null, qrDetector=null, lastQrValue='';
@@ -911,7 +913,7 @@ function finishEntry(pid,mode,auth){
   safeStorage.setItem('dadepo_entry_completed_at',new Date().toISOString());
   document.getElementById('entryShell').hidden=true;
   document.getElementById('mainApp').hidden=false;
-  renderPlaces();renderSchedule(currentScheduleDay);renderStampUI();
+  renderPlaces();renderSchedule(currentScheduleMode);renderStampUI();
   loadRemoteStampRecords();
   goPage('home');
   logExperimentEvent('festival_home_entered',{participant_id:pid,mode,auth_method:auth||null});
@@ -994,7 +996,7 @@ function initializeEntryFlow(){
 }
 initializeEntryFlow();
 
-renderMapPins();renderPlaces();renderSchedule(1);renderStampUI();
+renderMapPins();renderPlaces();renderSchedule('next');renderStampUI();
 subscribePlaces();
 auth.onAuthStateChanged(user=>{
   if(user&&(participationMode==='account'||participationMode==='anonymous')){
@@ -1060,7 +1062,13 @@ try{
   db.collection('events').doc(EVENT_ID).collection('schedule').onSnapshot(snap=>{
     schedules=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(item=>item.published!==false);
     schedules.sort((a,b)=>`${a.date||''}${a.time||''}`.localeCompare(`${b.date||''}${b.time||''}`));
-    renderSchedule(currentScheduleDay);
+    renderSchedule(currentScheduleMode);
   },err=>console.warn('schedule listen failed',err));
 }catch(e){console.warn('schedule subscribe failed',e)}
-setInterval(()=>{if(!document.getElementById('mainApp').hidden)renderSchedule(currentScheduleDay)},30000); // 시간 경과에 따라 상태 자동 갱신
+try{
+  db.collection('events').doc(EVENT_ID).collection('settings').doc('schedule').onSnapshot(doc=>{
+    activeScheduleDay=Math.max(1,Math.min(3,Number(doc.exists?doc.data().activeDay:1)||1));
+    renderSchedule(currentScheduleMode);
+  },err=>console.warn('schedule setting listen failed',err));
+}catch(e){console.warn('schedule setting subscribe failed',e)}
+setInterval(()=>{if(!document.getElementById('mainApp').hidden)renderSchedule(currentScheduleMode)},30000); // 시간 경과에 따라 상태 자동 갱신
