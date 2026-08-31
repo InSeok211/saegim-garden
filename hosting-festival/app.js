@@ -15,16 +15,40 @@ const cloudFunctions=firebase.app().functions('asia-northeast3');
 const EVENT_ID='dadaepo-beer-2026';
 const participantPersistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(() => {});
 
-let places={
-  stage:{name:'메인 무대',category:'편의시설',emoji:'🎤',summary:'해변 가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 해변 가요제 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false},
-  food1:{name:'바다어묵',category:'먹거리',emoji:'🍢',summary:'따뜻한 부산 어묵과 음료를 판매하는 참여 점포',hours:'16:00–21:30',info:'대표 메뉴: 꼬치어묵, 물떡, 어묵국물',contact:'현장 주문',stampable:true,code:'DADAE-001'},
-  shop1:{name:'다대포 기념공방',category:'체험·판매',emoji:'🎁',summary:'바다 테마 기념품과 간단한 만들기 체험',hours:'16:00–20:30',info:'판매: 키링, 엽서, 축제 기념 배지',contact:'인스타그램·현장 문의',stampable:true,code:'DADAE-002'},
-  food2:{name:'바다 간식 부스',category:'먹거리',emoji:'🍧',summary:'시원한 음료와 축제 간식을 판매하는 참여 부스',hours:'16:00–21:30',info:'대표 메뉴: 슬러시, 아이스크림, 음료',contact:'현장 주문',stampable:true,code:'DADAE-003'},
-  experience1:{name:'해변 공예 체험',category:'체험·판매',emoji:'🎨',summary:'다대포 바다를 주제로 작은 공예품을 만드는 체험 부스',hours:'16:00–20:30',info:'체험: 바다 키링과 미니 배지 만들기',contact:'현장 접수',stampable:true,code:'DADAE-004'},
-  info:{name:'운영 안내소',category:'편의시설',emoji:'ℹ️',summary:'행사 안내, 분실물, 일정 변경과 경품 수령 문의',hours:'15:30–행사 종료',info:'분실물 접수와 미션 경품 수령을 지원합니다.',contact:'051-000-0000',stampable:true,code:'DADAE-005'},
-  toilet:{name:'공중화장실',category:'편의시설',emoji:'🚻',summary:'행사장 북쪽 공중화장실',hours:'상시 이용',info:'장애인 화장실과 기저귀 교환대가 있습니다.',contact:'-',stampable:false},
-  parking:{name:'임시 주차장',category:'편의시설',emoji:'🅿️',summary:'행사 방문객 임시 주차 구역',hours:'15:00–22:00',info:'혼잡 시 대중교통 이용을 권장합니다.',contact:'주차 안내요원 문의',stampable:false}
+const DEFAULT_PLACES={
+  stage:{name:'메인 무대',category:'편의시설',markerType:'stage',emoji:'🎤',summary:'해변 가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 해변 가요제 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false,active:true,x:42,y:40,order:10},
+  food1:{name:'바다어묵',category:'먹거리',markerType:'food',emoji:'🍢',summary:'따뜻한 부산 어묵과 음료를 판매하는 참여 점포',hours:'16:00–21:30',info:'대표 메뉴: 꼬치어묵, 물떡, 어묵국물',contact:'현장 주문',stampable:true,code:'DADAE-001',active:true,x:67,y:60,order:20},
+  shop1:{name:'다대포 기념공방',category:'체험·판매',emoji:'🎁',summary:'바다 테마 기념품과 간단한 만들기 체험',hours:'16:00–20:30',info:'판매: 키링, 엽서, 축제 기념 배지',contact:'인스타그램·현장 문의',stampable:true,code:'DADAE-002',active:true,x:25,y:65,order:30},
+  food2:{name:'바다 간식 부스',category:'먹거리',markerType:'food',emoji:'🍧',summary:'시원한 음료와 축제 간식을 판매하는 참여 부스',hours:'16:00–21:30',info:'대표 메뉴: 슬러시, 아이스크림, 음료',contact:'현장 주문',stampable:true,code:'DADAE-003',active:true,x:82,y:72,order:40},
+  experience1:{name:'해변 공예 체험',category:'체험·판매',emoji:'🎨',summary:'다대포 바다를 주제로 작은 공예품을 만드는 체험 부스',hours:'16:00–20:30',info:'체험: 바다 키링과 미니 배지 만들기',contact:'현장 접수',stampable:true,code:'DADAE-004',active:true,x:34,y:52,order:50},
+  info:{name:'운영 안내소',category:'편의시설',markerType:'info',emoji:'ℹ️',summary:'행사 안내, 분실물, 일정 변경과 경품 수령 문의',hours:'15:30–행사 종료',info:'분실물 접수와 미션 경품 수령을 지원합니다.',contact:'051-000-0000',stampable:true,code:'DADAE-005',active:true,x:12,y:49,order:60},
+  toilet:{name:'공중화장실',category:'편의시설',markerType:'toilet',emoji:'🚻',summary:'행사장 북쪽 공중화장실',hours:'상시 이용',info:'장애인 화장실과 기저귀 교환대가 있습니다.',contact:'-',stampable:false,active:true,x:73,y:39,order:70},
+  parking:{name:'임시 주차장',category:'편의시설',emoji:'🅿️',summary:'행사 방문객 임시 주차 구역',hours:'15:00–22:00',info:'혼잡 시 대중교통 이용을 권장합니다.',contact:'주차 안내요원 문의',stampable:false,active:true,x:45,y:83,order:80}
 };
+let places={...DEFAULT_PLACES};
+
+const MAP_MARKERS={
+  food:{icon:'truck',label:'푸드트럭'},stage:{icon:'mic-2',label:'무대'},info:{icon:'info',label:'안내소'},
+  toilet:{icon:'toilet',label:'화장실'},medical:{icon:'cross',label:'의료·안전'},entrance:{icon:'log-in',label:'출입구'},
+  seating:{icon:'armchair',label:'테이블·관람석'},default:{icon:'map-pin',label:'장소'}
+};
+function markerTypeFor(id,place={}){
+  if(MAP_MARKERS[place.markerType])return place.markerType;
+  const text=`${id} ${place.name||''} ${place.category||''}`.toLowerCase();
+  if(/화장실|toilet/.test(text))return'toilet';
+  if(/의료|응급|안전|medical/.test(text))return'medical';
+  if(/입구|출구|출입|entrance|gate/.test(text))return'entrance';
+  if(/테이블|관람|스탠드|좌석|seating/.test(text))return'seating';
+  if(/무대|공연|stage/.test(text))return'stage';
+  if(/안내|운영본부|info/.test(text))return'info';
+  if(place.category==='먹거리'||/푸드|트럭|food/.test(text))return'food';
+  return'default';
+}
+function markerIconMarkup(id,place){
+  const type=markerTypeFor(id,place);const marker=MAP_MARKERS[type]||MAP_MARKERS.default;
+  return `<span class="marker-symbol"><i data-lucide="${marker.icon}"></i></span>${place.stampable?'<span class="marker-qr-badge">QR</span>':''}`;
+}
+function refreshMarkerIcons(){if(window.lucide)window.lucide.createIcons({attrs:{'aria-hidden':'true'}})}
 
 let REQUIRED_STAMPS=5;
 const safeStorage=(()=>{
@@ -83,7 +107,7 @@ function goPage(id,navEl){
   window.scrollTo({top:0,behavior:id==='map'?'auto':'smooth'});
   if(id==='map') renderPlaces(currentFilter);
   if(id==='scan') renderStampUI();
-  if(id==='schedule'&&!document.querySelector('#scheduleList').children.length) renderSchedule('now');
+  if(id==='schedule'&&!document.querySelector('#scheduleList').children.length) renderSchedule(currentScheduleDay);
 }
 
 let currentFilter='전체';
@@ -104,12 +128,37 @@ function renderPlaces(filter=currentFilter){
   const rows=getFilteredPlaces();
   list.innerHTML=rows.length?rows.map(([id,p])=>{
     const state=p.stampable?(hasStamp(id)?'<i class="stamp-state done">도장 완료</i>':'<i class="stamp-state todo">미획득</i>'):'';
-    return `<button class="place-card" onclick="selectMapPlace('${id}');toggleMapList(false)"><span class="place-thumb">${p.emoji}</span><span><h4>${p.name}</h4><p>${p.summary}</p><i class="place-tag">${p.category}</i>${state}</span><span class="chev">›</span></button>`;
+    return `<button class="place-card" onclick="selectMapPlace('${id}');toggleMapList(false)"><span class="place-thumb">${escapeHtml(p.emoji||'📍')}</span><span><h4>${escapeHtml(p.name)}</h4><p>${escapeHtml(p.summary||'')}</p><i class="place-tag">${escapeHtml(p.category||'기타')}</i>${state}</span><span class="chev">›</span></button>`;
   }).join(''):'<div class="map-list-empty">조건에 맞는 점포나 시설이 없습니다.</div>';
   const count=document.getElementById('mapResultCount');if(count)count.textContent=rows.length;
   const subtitle=document.getElementById('mapListSubtitle');if(subtitle)subtitle.textContent=`${currentFilter}${mapSearchQuery?' 검색':''} · ${rows.length}곳`;
   const status=document.getElementById('mapStatusText');if(status)status.textContent=mapSearchQuery?`“${mapSearchQuery}” 검색 결과 ${rows.length}곳`:`${currentFilter} ${rows.length}곳 보기`;
   updateMapPins(rows.map(r=>r[0]));
+}
+function renderMapPins(){
+  const container=document.getElementById('mapPins');if(!container)return;
+  container.innerHTML=Object.entries(places)
+    .sort(([,a],[,b])=>Number(a.order||0)-Number(b.order||0))
+    .map(([id,p])=>`<button class="pin marker-${markerTypeFor(id,p)}" data-id="${id}" style="left:${Math.max(3,Math.min(94,Number(p.x)||50))}%;top:${Math.max(8,Math.min(90,Number(p.y)||50))}%" onclick="selectMapPlace('${id}',this)" aria-label="${escapeHtml(p.name)}">${markerIconMarkup(id,p)}</button>`)
+    .join('');
+  refreshMarkerIcons();
+}
+function subscribePlaces(){
+  try{
+    db.collection('events').doc(EVENT_ID).collection('places').onSnapshot(snap=>{
+      if(snap.empty){
+        places={...DEFAULT_PLACES};
+      }else{
+        places=Object.fromEntries(snap.docs
+          .map(doc=>[doc.id,{...doc.data()}])
+          .filter(([,place])=>place.active!==false));
+      }
+      if(selectedMapPlaceId&&!places[selectedMapPlaceId])clearMapSelection();
+      renderMapPins();
+      renderPlaces(currentFilter);
+      renderStampUI();
+    },err=>console.warn('place listen failed',err));
+  }catch(e){console.warn('place subscribe failed',e)}
 }
 function setFilter(filter,el){
   currentFilter=filter;
@@ -210,7 +259,9 @@ function openPlace(id,pinEl){
   const p=places[id]; if(!p)return;
   document.querySelectorAll('.pin').forEach(x=>x.classList.remove('active'));
   const pin=pinEl||document.querySelector(`.pin[data-id="${id}"]`); if(pin)pin.classList.add('active');
-  const stampInfo=p.stampable?(hasStamp(id)?'✓ 도장 획득 완료':`아직 받지 않은 도장 · 코드 ${p.code}`):'도장 미운영 시설';
+  const stampInfo=p.stampable
+    ?(hasStamp(id)?'✓ 도장 획득 완료':p.qrRequired?'아직 받지 않은 도장 · 부스의 보안 QR을 스캔해주세요':`아직 받지 않은 도장 · 코드 ${p.code||id.toUpperCase()}`)
+    :'도장 미운영 시설';
   const scanButton=p.stampable&&!hasStamp(id)?`<button class="btn primary" onclick="closeSheet();goPage('scan');toggleScannerPanel(true)">QR 스캔</button>`:`<button class="btn primary" onclick="showToast('외부 지도 길찾기 연결 예정입니다.')">길찾기</button>`;
   document.getElementById('sheetContent').innerHTML=`
     <div class="sheet-hero">${p.emoji}</div>
@@ -273,13 +324,13 @@ function computeScheduleStatus(dateStr,timeStr,endStr){
   if(now>end)return'done';
   return'now';
 }
-let currentScheduleMode='now';
-function renderSchedule(mode=currentScheduleMode,el){
-  currentScheduleMode=mode;
+let currentScheduleDay=1;
+function renderSchedule(day=currentScheduleDay,el){
+  currentScheduleDay=Math.max(1,Math.min(3,Number(day)||1));
   if(el){document.querySelectorAll('.schedule-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
-  const withStatus=schedules.map(s=>({...s,_status:computeScheduleStatus(s.date,s.time,s.end)}));
-  let rows=mode==='all'?withStatus:withStatus.filter(s=>s._status===mode);
-  if(!rows.length&&mode==='now')rows=withStatus.filter(s=>s._status==='next').slice(0,1);
+  const rows=schedules
+    .filter(s=>s.published!==false&&Number(s.day||1)===currentScheduleDay)
+    .map(s=>({...s,_status:computeScheduleStatus(s.date,s.time,s.end)}));
   document.getElementById('scheduleList').innerHTML=rows.length?rows.map(s=>`<article class="schedule-card ${s._status==='now'?'now':''}"><div class="time-box">${s.date?`<small class="schedule-date">${escapeHtml(formatScheduleDate(s.date))}</small>`:''}<strong>${escapeHtml(s.time)}</strong><span>~ ${escapeHtml(s.end)}</span></div><div><h4>${escapeHtml(s.title)}</h4><p>${escapeHtml(s.desc||'')}</p><div class="schedule-meta"><button class="location" onclick="goPage('map');focusPin('stage')">📍 ${escapeHtml(s.place||'')}</button>${s._status==='now'?'<span class="status-badge">진행 중</span>':s._status==='next'?'<span class="status-badge">예정</span>':''}</div></div></article>`).join(''):`<div class="stamp-empty">아직 등록된 일정이 없습니다.</div>`;
 }
 
@@ -424,6 +475,18 @@ function findSpotByQr(value){
   return Object.entries(places).find(([id,p])=>p.stampable&&(p.code===code||id.toUpperCase()===code));
 }
 
+function parseSecureStampQr(value){
+  const raw=String(value||'').trim();
+  if(!/^https?:\/\//i.test(raw))return null;
+  try{
+    const url=new URL(raw);
+    const pointId=(url.searchParams.get('point')||'').trim().toLowerCase();
+    const token=(url.searchParams.get('token')||'').trim();
+    if(!pointId||!token)return null;
+    return{pointId,token};
+  }catch(e){return null}
+}
+
 function addStamp(spotId){
   const p=places[spotId];
   if(!p||!p.stampable){showToast('도장 적립 장소가 아닙니다.');return}
@@ -434,14 +497,14 @@ function addStamp(spotId){
   showStampSuccess(p);
 }
 
-async function addStamp(spotId){
+async function addStamp(spotId,qrToken=''){
   const p=places[spotId];
   if(!p||!p.stampable){showToast('도장 받을 장소가 아닙니다.');return}
   if(hasStamp(spotId)){showToast('이미 받은 도장입니다.');renderStampUI();return}
   try{
     if(participationMode==='anonymous'&&currentUserUid&&!currentUserUid.startsWith('local-')){
       document.getElementById('scanStatus').textContent='서버에서 도장을 확인하는 중입니다.';
-      const claimed=await claimStampOnServer(spotId);
+      const claimed=await claimStampOnServer(spotId,qrToken);
       if(claimed.alreadyClaimed){showToast('이미 받은 도장입니다.');await loadRemoteStampRecords();renderStampUI();return}
     }else if(!allowLocalFallback()){
       showToast('참가권 확인 후 다시 시도해 주세요.');
@@ -460,8 +523,9 @@ async function addStamp(spotId){
       showStampSuccess(p);
       return;
     }
-    document.getElementById('scanStatus').textContent='도장을 저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.';
-    showToast('도장을 저장하지 못했습니다.');
+    const invalidQr=String(err&&err.code||'').includes('invalid-argument');
+    document.getElementById('scanStatus').textContent=invalidQr?'만료되었거나 재발급 전의 QR입니다. 부스의 최신 QR을 스캔해주세요.':'도장을 저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.';
+    showToast(invalidQr?'사용할 수 없는 QR입니다.':'도장을 저장하지 못했습니다.');
   }
 }
 
@@ -479,12 +543,15 @@ function handleQrResult(value){
   lastQrValue=String(value||'').trim();
   stopScanner();
   const result=document.getElementById('qrResult');
-  document.getElementById('qrResultText').textContent=lastQrValue;
+  const secureQr=parseSecureStampQr(lastQrValue);
+  document.getElementById('qrResultText').textContent=secureQr?'보안 QR 확인됨':lastQrValue;
   result.classList.add('show');
-  const spot=findSpotByQr(lastQrValue);
+  const spot=secureQr
+    ?Object.entries(places).find(([id,p])=>id===secureQr.pointId&&p.stampable)
+    :findSpotByQr(lastQrValue);
   if(!spot){document.getElementById('scanStatus').textContent='등록되지 않은 점포 QR입니다.';showToast('유효한 점포 QR이 아닙니다.');return}
   document.getElementById('scanStatus').textContent=`${spot[1].name} QR을 확인했습니다.`;
-  addStamp(spot[0]);
+  addStamp(spot[0],secureQr?secureQr.token:'');
 }
 
 function submitManualCode(){
@@ -635,11 +702,11 @@ function getStampRequestId(spotId){
   }
   return requestId;
 }
-async function claimStampOnServer(spotId){
+async function claimStampOnServer(spotId,qrToken=''){
   const p=places[spotId];
   const requestId=getStampRequestId(spotId);
   const claimStamp=cloudFunctions.httpsCallable('claimStamp');
-  const result=await claimStamp({eventId:EVENT_ID,pointId:spotId,code:p.code,requestId});
+  const result=await claimStamp({eventId:EVENT_ID,pointId:spotId,code:p.code,qrToken,requestId});
   safeStorage.removeItem(`festival.stampRequest.${spotId}`);
   return result&&result.data?result.data:{};
 }
@@ -844,7 +911,7 @@ function finishEntry(pid,mode,auth){
   safeStorage.setItem('dadepo_entry_completed_at',new Date().toISOString());
   document.getElementById('entryShell').hidden=true;
   document.getElementById('mainApp').hidden=false;
-  renderPlaces();renderSchedule('now');renderStampUI();
+  renderPlaces();renderSchedule(currentScheduleDay);renderStampUI();
   loadRemoteStampRecords();
   goPage('home');
   logExperimentEvent('festival_home_entered',{participant_id:pid,mode,auth_method:auth||null});
@@ -927,7 +994,8 @@ function initializeEntryFlow(){
 }
 initializeEntryFlow();
 
-renderPlaces();renderSchedule('now');renderStampUI();
+renderMapPins();renderPlaces();renderSchedule(1);renderStampUI();
+subscribePlaces();
 auth.onAuthStateChanged(user=>{
   if(user&&(participationMode==='account'||participationMode==='anonymous')){
     currentUserUid=user.uid;
@@ -990,9 +1058,9 @@ try{
 // ===== 운영본부 실시간 일정 관리 수신 =====
 try{
   db.collection('events').doc(EVENT_ID).collection('schedule').onSnapshot(snap=>{
-    schedules=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+    schedules=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(item=>item.published!==false);
     schedules.sort((a,b)=>`${a.date||''}${a.time||''}`.localeCompare(`${b.date||''}${b.time||''}`));
-    renderSchedule(currentScheduleMode);
+    renderSchedule(currentScheduleDay);
   },err=>console.warn('schedule listen failed',err));
 }catch(e){console.warn('schedule subscribe failed',e)}
-setInterval(()=>{if(!document.getElementById('mainApp').hidden)renderSchedule(currentScheduleMode)},30000); // 시간 경과에 따라 상태 자동 갱신
+setInterval(()=>{if(!document.getElementById('mainApp').hidden)renderSchedule(currentScheduleDay)},30000); // 시간 경과에 따라 상태 자동 갱신

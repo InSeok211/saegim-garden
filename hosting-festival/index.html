@@ -123,14 +123,7 @@
             <div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
             <span class="map-label" style="left:23px;top:176px">행사장 입구</span>
             <span class="map-label" style="right:34px;top:244px">먹거리 구역</span>
-            <button class="pin" data-id="stage" style="left:42%;top:210px" onclick="selectMapPlace('stage',this)" aria-label="메인 무대"><span>🎤</span></button>
-            <button class="pin" data-id="food1" style="left:67%;top:310px" onclick="selectMapPlace('food1',this)" aria-label="바다어묵"><span>🍢</span></button>
-            <button class="pin" data-id="shop1" style="left:25%;top:340px" onclick="selectMapPlace('shop1',this)" aria-label="다대포 기념공방"><span>🎁</span></button>
-            <button class="pin" data-id="food2" style="left:82%;top:375px" onclick="selectMapPlace('food2',this)" aria-label="바다 간식 부스"><span>🍧</span></button>
-            <button class="pin" data-id="experience1" style="left:34%;top:270px" onclick="selectMapPlace('experience1',this)" aria-label="해변 공예 체험"><span>🎨</span></button>
-            <button class="pin" data-id="info" style="left:12%;top:254px" onclick="selectMapPlace('info',this)" aria-label="운영 안내소"><span>ℹ️</span></button>
-            <button class="pin" data-id="toilet" style="left:73%;top:205px" onclick="selectMapPlace('toilet',this)" aria-label="공중화장실"><span>🚻</span></button>
-            <button class="pin" data-id="parking" style="left:45%;top:430px" onclick="selectMapPlace('parking',this)" aria-label="임시 주차장"><span>🅿️</span></button>
+            <div id="mapPins"></div>
           </div>
         </div>
 
@@ -143,6 +136,7 @@
           <div class="map-filter-strip" id="filters">
             <button class="filter active" onclick="setFilter('전체',this)">전체</button>
             <button class="filter" onclick="setFilter('미획득',this)">미획득</button>
+            <button class="filter" onclick="setFilter('무대·공연',this)">무대·공연</button>
             <button class="filter" onclick="setFilter('먹거리',this)">먹거리</button>
             <button class="filter" onclick="setFilter('체험·판매',this)">체험·판매</button>
             <button class="filter" onclick="setFilter('편의시설',this)">편의시설</button>
@@ -213,9 +207,9 @@
     <section class="page" id="schedule">
       <div class="page-head"><h2>행사 일정</h2><p>공연과 프로그램 위치를 지도에서 바로 확인할 수 있습니다.</p></div>
       <div class="schedule-tabs">
-        <button class="schedule-tab active" onclick="renderSchedule('now',this)">진행 중</button>
-        <button class="schedule-tab" onclick="renderSchedule('next',this)">곧 시작</button>
-        <button class="schedule-tab" onclick="renderSchedule('all',this)">전체 일정</button>
+        <button class="schedule-tab active" onclick="renderSchedule(1,this)">1일차</button>
+        <button class="schedule-tab" onclick="renderSchedule(2,this)">2일차</button>
+        <button class="schedule-tab" onclick="renderSchedule(3,this)">3일차</button>
       </div>
       <div class="schedule-list" id="scheduleList"></div>
     </section>
@@ -311,6 +305,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="app.js?v=20260807-ioscam1"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="app.js?v=20260831-schedule-days1"></script>
 </body>
 </html>

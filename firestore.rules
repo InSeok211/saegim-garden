@@ -45,9 +45,13 @@ service cloud.firestore {
         }
       }
 
-      match /stampPoints/{pointId} {
+      match /places/{placeId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if isAdmin();
+      }
+
+      match /placeSecrets/{placeId} {
+        allow read, write: if false;
       }
 
       match /rewards/{rewardId} {

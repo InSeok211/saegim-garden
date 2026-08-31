@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12384f" />
+  <title>참가자 목록 | 운영 실시간 모니터</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260827-places1" />
+</head>
+<body data-page="participants">
+  <div class="admin-layout">
+    <aside class="sidebar" aria-label="관리 메뉴">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">♪</div><div><strong>다대포 해변 축제</strong><small>QR 스탬프 운영</small></div></div>
+      <nav class="side-nav">
+        <a class="nav-btn" data-page="overview" href="index.html">운영 현황</a>
+        <a class="nav-btn" data-page="participants" href="participants.html">참가자 목록</a>
+        <a class="nav-btn" data-page="booths" href="booths.html">부스 현황</a>
+        <a class="nav-btn" data-page="broadcast" href="broadcast.html">실시간 공지</a>
+        <a class="nav-btn" data-page="schedule" href="schedule.html">행사 일정</a>
+      </nav>
+      <div class="side-bottom"><span>관리 화면</span><strong>saegim-qr</strong></div>
+    </aside>
+    <div class="admin-main">
+      <header class="topbar">
+        <div class="title-group"><p class="eyebrow">Participants</p><h1>참가자 목록</h1><p>최근 참가자와 스탬프 진행 상태를 바로 확인합니다.</p></div>
+        <div class="top-actions"><span class="status-pill"><i></i><span id="topConnectionText">연결 중</span></span><a class="ghost-btn" href="https://dadaepo-festival.web.app/">참가자 앱</a></div>
+      </header>
+      <main class="monitor-shell">
+        <section class="panel participant-panel">
+          <div class="panel-head">
+            <div><p class="eyebrow">Live Participants</p><h2>참가자 목록</h2><p class="desc">참가 코드, UID, 스탬프 개수, 완주 여부를 확인합니다.</p></div>
+            <span id="participantSummary" class="email-pill">불러오는 중</span>
+          </div>
+          <div class="list-toolbar">
+            <label class="search-field"><span>검색</span><input id="participantSearch" type="search" placeholder="참가 코드 또는 UID 검색" autocomplete="off" /></label>
+            <label class="filter-field"><span>상태</span><select id="participantFilter"><option value="all">전체</option><option value="active">진행 중</option><option value="completed">완주</option></select></label>
+          </div>
+          <div id="participantList" class="participant-list"><div class="empty">참가자 목록을 불러오는 중입니다.</div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="admin-monitor.js?v=20260827-places1"></script>
+</body>
+</html>

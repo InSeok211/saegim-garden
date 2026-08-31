@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12384f" />
+  <title>부스 현황 | 운영 실시간 모니터</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260827-drag1" />
+</head>
+<body data-page="booths">
+  <div class="admin-layout">
+    <aside class="sidebar" aria-label="관리 메뉴">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">♪</div><div><strong>다대포 해변 축제</strong><small>QR 스탬프 운영</small></div></div>
+      <nav class="side-nav">
+        <a class="nav-btn" data-page="overview" href="index.html">운영 현황</a>
+        <a class="nav-btn" data-page="participants" href="participants.html">참가자 목록</a>
+        <a class="nav-btn" data-page="booths" href="booths.html">부스 현황</a>
+        <a class="nav-btn" data-page="broadcast" href="broadcast.html">실시간 공지</a>
+        <a class="nav-btn" data-page="schedule" href="schedule.html">행사 일정</a>
+      </nav>
+      <div class="side-bottom"><span>관리 화면</span><strong>saegim-qr</strong></div>
+    </aside>
+    <div class="admin-main">
+      <header class="topbar">
+        <div class="title-group"><p class="eyebrow">Booth Stats</p><h1>부스 현황</h1><p>어느 부스에 사람이 몰리는지 빠르게 확인합니다.</p></div>
+        <div class="top-actions"><span class="status-pill"><i></i><span id="topConnectionText">연결 중</span></span><a class="ghost-btn" href="https://dadaepo-festival.web.app/">참가자 앱</a></div>
+      </header>
+      <main class="monitor-shell">
+        <section class="panel place-manager-panel">
+          <div class="panel-head">
+            <div><p class="eyebrow">Map Place Manager</p><h2>지도 장소 관리</h2><p class="desc">지도에서 위치를 찍고 장소 정보를 저장하면 참가자 앱에 실시간으로 반영됩니다.</p></div>
+            <div class="place-auth-actions">
+              <span id="placeAuthState" class="email-pill">관리자 확인 중</span>
+              <button id="placeLoginBtn" class="ghost-btn" type="button">Google 관리자 로그인</button>
+              <button id="placeLogoutBtn" class="ghost-btn" type="button" hidden>로그아웃</button>
+            </div>
+          </div>
+
+          <div class="place-manager-layout">
+            <div class="place-map-column">
+              <div class="admin-place-map" id="adminPlaceMap" aria-label="장소 위치 편집 지도">
+                <div class="admin-road road-one"></div><div class="admin-road road-two"></div><div class="admin-road road-three"></div>
+                <span class="admin-map-label label-entry">행사장 입구</span>
+                <span class="admin-map-label label-food">먹거리 구역</span>
+                <div id="adminPlacePins"></div>
+                <span id="placePositionHint" class="position-hint">지도를 눌러 장소 위치를 지정하세요.</span>
+              </div>
+              <div class="place-map-toolbar">
+                <strong id="placeCountText">장소 불러오는 중</strong>
+                <button id="placeSeedBtn" class="ghost-btn" type="button">기존 장소 8개 연결</button>
+                <button id="placeNewBtn" class="primary-btn" type="button">새 장소</button>
+              </div>
+              <div id="adminPlaceList" class="admin-place-list"></div>
+            </div>
+
+            <form class="place-form" id="placeForm">
+              <div class="place-form-head"><div><p class="eyebrow">Place Details</p><h3 id="placeFormTitle">새 장소 추가</h3></div><span id="placeFormMode" class="place-mode-chip">새 장소</span></div>
+              <div class="place-form-grid">
+                <label class="bc-field"><span>장소 ID</span><input id="placeId" maxlength="32" placeholder="예: coffee1" autocomplete="off" /></label>
+                <label class="bc-field"><span>지도 마커</span><select id="placeMarkerType"><option value="food">푸드트럭</option><option value="stage">무대</option><option value="info">안내소</option><option value="toilet">화장실</option><option value="medical">의료·안전</option><option value="entrance">출입구</option><option value="seating">테이블·관람석</option></select></label>
+                <label class="bc-field bc-full"><span>장소 이름</span><input id="placeName" maxlength="50" placeholder="사용자 지도에 표시할 이름" /></label>
+                <label class="bc-field"><span>분류</span><select id="placeCategory"><option>먹거리</option><option>체험·판매</option><option>편의시설</option><option>무대·공연</option><option>기타</option></select></label>
+                <label class="bc-field"><span>도장 아이콘</span><input id="placeEmoji" maxlength="8" placeholder="예: ☕" /></label>
+                <label class="bc-field bc-full"><span>운영시간</span><input id="placeHours" maxlength="40" placeholder="16:00–21:30" /></label>
+                <label class="bc-field bc-full"><span>목록용 짧은 설명</span><input id="placeSummary" maxlength="100" placeholder="어떤 장소인지 한 줄로 설명" /></label>
+                <label class="bc-field bc-full"><span>상세 정보</span><textarea id="placeInfo" rows="3" maxlength="500" placeholder="메뉴, 프로그램, 이용 방법 등 상세 설명"></textarea></label>
+                <label class="bc-field bc-full"><span>문의 정보</span><input id="placeContact" maxlength="80" placeholder="현장 문의 또는 전화번호" /></label>
+                <label class="bc-field"><span>지도 가로 위치 (%)</span><input id="placeX" type="number" min="3" max="94" step="1" value="50" /></label>
+                <label class="bc-field"><span>지도 세로 위치 (%)</span><input id="placeY" type="number" min="8" max="90" step="1" value="50" /></label>
+                <label class="check-field bc-full"><input id="placeStampable" type="checkbox" /><span>QR 스탬프 장소로 사용</span></label>
+              </div>
+              <section class="place-qr-panel" id="placeQrPanel" hidden aria-labelledby="placeQrTitle">
+                <div class="place-qr-head">
+                  <div><p class="eyebrow">Secure Stamp QR</p><h4 id="placeQrTitle">부스 스탬프 QR</h4></div>
+                  <span id="placeQrVersion" class="place-mode-chip">미발급</span>
+                </div>
+                <div class="place-qr-body">
+                  <div class="place-qr-preview" id="placeQrPreview"><span>장소를 저장하면<br>보안 QR이 생성됩니다.</span></div>
+                  <div class="place-qr-copy">
+                    <strong id="placeQrName">장소를 선택해주세요.</strong>
+                    <p id="placeQrStatus">참가자 한 명당 이 장소의 스탬프를 한 번만 받을 수 있습니다.</p>
+                    <div class="place-qr-actions">
+                      <button id="placeQrViewBtn" class="primary-btn" type="button">QR 생성·보기</button>
+                      <button id="placeQrDownloadBtn" class="ghost-btn" type="button" disabled>PNG 다운로드</button>
+                      <button id="placeQrPrintBtn" class="ghost-btn" type="button" disabled>인쇄</button>
+                      <button id="placeQrRotateBtn" class="danger-btn" type="button">QR 재발급</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <p class="place-form-help">지도에서 원하는 위치를 누르면 가로·세로 위치가 자동 입력됩니다.</p>
+              <p id="placeEditorStatus" class="bc-status"></p>
+              <div class="place-form-actions">
+                <button id="placeSaveBtn" class="primary-btn" type="submit">장소 저장</button>
+                <button id="placeRemoveBtn" class="danger-btn" type="button" hidden>사용자 지도에서 제거</button>
+                <button id="placeRestoreBtn" class="ghost-btn" type="button" hidden>다시 표시</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel booth-panel">
+          <div class="panel-head">
+            <div><p class="eyebrow">Stamp Points</p><h2>부스별 · 참가자별 이용 현황</h2><p class="desc">부스별 이용 수와 참가자별 방문 부스를 나눠 봅니다.</p></div>
+            <span id="boothStatsState" class="email-pill">연결 중</span>
+          </div>
+          <div id="boothStatsBody" class="booth-layout">
+            <div><h3 class="subhead">부스별 이용 수</h3><div id="boothCountList" class="participant-list"></div></div>
+            <div><h3 class="subhead">참가자별 이용 부스</h3><div id="participantBoothList" class="participant-list"></div></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-monitor.js?v=20260829-markers1"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12384f" />
+  <title>실시간 공지 | 운영 실시간 모니터</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260827-places1" />
+</head>
+<body data-page="broadcast">
+  <div class="admin-layout">
+    <aside class="sidebar" aria-label="관리 메뉴">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">♪</div><div><strong>다대포 해변 축제</strong><small>QR 스탬프 운영</small></div></div>
+      <nav class="side-nav">
+        <a class="nav-btn" data-page="overview" href="index.html">운영 현황</a>
+        <a class="nav-btn" data-page="participants" href="participants.html">참가자 목록</a>
+        <a class="nav-btn" data-page="booths" href="booths.html">부스 현황</a>
+        <a class="nav-btn" data-page="broadcast" href="broadcast.html">실시간 공지</a>
+        <a class="nav-btn" data-page="schedule" href="schedule.html">행사 일정</a>
+      </nav>
+      <div class="side-bottom"><span>관리 화면</span><strong>saegim-qr</strong></div>
+    </aside>
+    <div class="admin-main">
+      <header class="topbar">
+        <div class="title-group"><p class="eyebrow">Live Broadcast</p><h1>실시간 공지</h1><p>참가자 앱 홈과 공지함에 표시되는 안내를 관리합니다.</p></div>
+        <div class="top-actions"><span class="status-pill"><i></i><span id="topConnectionText">연결 중</span></span><a class="ghost-btn" href="https://dadaepo-festival.web.app/">참가자 앱</a></div>
+      </header>
+      <main class="monitor-shell">
+        <section class="panel broadcast-panel">
+          <div class="panel-head">
+            <div><p class="eyebrow">Notice</p><h2>실시간 알림 방송</h2><p class="desc">공지를 여러 건 만들어 두고 필요할 때 활성화/비활성화할 수 있습니다.</p></div>
+            <span id="broadcastState" class="email-pill">연결 중</span>
+          </div>
+          <div class="broadcast-grid">
+            <label class="bc-field"><span>유형</span><select id="bcType"><option value="urgent">긴급 공지</option><option value="info">안내</option><option value="safety">안전 안내</option></select></label>
+            <label class="bc-field"><span>제목 · 홈 배너에 표시</span><input id="bcTitle" type="text" maxlength="80" placeholder="예: 우천으로 공연이 30분 지연됩니다" /></label>
+            <label class="bc-field bc-full"><span>상세 내용 · 공지함에 표시</span><textarea id="bcBody" rows="3" maxlength="500" placeholder="참가자에게 전달할 자세한 안내를 입력하세요."></textarea></label>
+          </div>
+          <div class="broadcast-actions"><button id="bcSubmitBtn" class="primary-btn" type="button">새 공지 발송</button><button id="bcResetBtn" class="ghost-btn" type="button" hidden>새로 작성</button></div>
+          <p id="bcStatus" class="bc-status"></p>
+          <div class="broadcast-list-head"><h3>공지 목록</h3></div>
+          <div id="bcList" class="broadcast-list"><div class="empty">아직 만든 공지가 없습니다.</div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="admin-monitor.js?v=20260827-places1"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 admin.initializeApp();
 setGlobalOptions({ region: "asia-northeast3", maxInstances: 20, invoker: "public" });
@@ -13,6 +14,7 @@ const COUNTER_ID = EVENT_ID;
 const CODE_PREFIX = "A";
 const CODE_DIGITS = 5;
 const REQUIRED_STAMPS = 5;
+const ADMIN_EMAILS = new Set(["rjbcom4263@gmail.com"]);
 const STAMP_POINTS = {
   food1: { code: "DADAE-001", name: "바다어묵" },
   shop1: { code: "DADAE-002", name: "다대포 기념공방" },
@@ -30,14 +32,130 @@ function participantCodeFromSeq(seq) {
   return `${CODE_PREFIX}${String(seq).padStart(CODE_DIGITS, "0")}`;
 }
 
-function findStampPoint(data) {
+function isAdminRequest(request) {
+  return Boolean(request.auth && ADMIN_EMAILS.has(String(request.auth.token.email || "").toLowerCase()));
+}
+
+function cleanPlaceId(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
+}
+
+function tokensMatch(left, right) {
+  const a = Buffer.from(String(left || ""));
+  const b = Buffer.from(String(right || ""));
+  return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
+}
+
+async function findStampPoint(eventId, data) {
   const rawCode = typeof data.code === "string" ? data.code.trim().toUpperCase() : "";
   const rawPointId = typeof data.pointId === "string" ? data.pointId.trim() : "";
+  const rawToken = typeof data.qrToken === "string" ? data.qrToken.trim() : "";
+  const placesRef = db.collection("events").doc(eventId).collection("places");
+
+  if (rawToken) {
+    if (!rawPointId) return null;
+    const [placeSnap, secretSnap] = await Promise.all([
+      placesRef.doc(rawPointId).get(),
+      db.collection("events").doc(eventId).collection("placeSecrets").doc(rawPointId).get(),
+    ]);
+    if (!placeSnap.exists || !secretSnap.exists) return null;
+    const place = placeSnap.data() || {};
+    const secret = secretSnap.data() || {};
+    if (place.active === false || place.stampable !== true || secret.active === false) return null;
+    if (!tokensMatch(rawToken, secret.token)) return null;
+    return { pointId: placeSnap.id, code: place.code || "SECURE-QR", name: place.name || placeSnap.id };
+  }
+
+  if (rawPointId) {
+    const placeSnap = await placesRef.doc(rawPointId).get();
+    if (placeSnap.exists) {
+      const place = placeSnap.data() || {};
+      if (place.active === false || place.stampable !== true || place.qrRequired === true || !place.code) return null;
+      if (rawCode && String(place.code).toUpperCase() !== rawCode) return null;
+      return { pointId: placeSnap.id, code: String(place.code).toUpperCase(), name: place.name || placeSnap.id };
+    }
+  }
+
+  if (rawCode) {
+    const codeSnap = await placesRef.where("code", "==", rawCode).limit(1).get();
+    if (!codeSnap.empty) {
+      const doc = codeSnap.docs[0];
+      const place = doc.data() || {};
+      if (place.active === false || place.stampable !== true || place.qrRequired === true) return null;
+      return { pointId: doc.id, code: rawCode, name: place.name || doc.id };
+    }
+  }
+
+  // Firestore 장소를 처음 등록하기 전까지 기존 QR 5개는 계속 동작합니다.
+  const anyPlace = await placesRef.limit(1).get();
+  if (!anyPlace.empty) return null;
   if (rawPointId && STAMP_POINTS[rawPointId]) return { pointId: rawPointId, ...STAMP_POINTS[rawPointId] };
   return Object.entries(STAMP_POINTS)
     .map(([pointId, point]) => ({ pointId, ...point }))
     .find((point) => point.code === rawCode);
 }
+
+exports.managePlaceQr = onCall(async (request) => {
+  if (!isAdminRequest(request)) {
+    throw new HttpsError("permission-denied", "Administrator access is required.");
+  }
+
+  const eventId = String(request.data && request.data.eventId ? request.data.eventId : EVENT_ID);
+  const placeId = cleanPlaceId(request.data && request.data.placeId);
+  const action = String(request.data && request.data.action ? request.data.action : "get");
+  if (eventId !== EVENT_ID || !placeId) {
+    throw new HttpsError("invalid-argument", "A valid eventId and placeId are required.");
+  }
+  if (!new Set(["get", "rotate"]).has(action)) {
+    throw new HttpsError("invalid-argument", "Unsupported QR action.");
+  }
+
+  const eventRef = db.collection("events").doc(eventId);
+  const placeRef = eventRef.collection("places").doc(placeId);
+  const secretRef = eventRef.collection("placeSecrets").doc(placeId);
+  const [placeSnap, secretSnap] = await Promise.all([placeRef.get(), secretRef.get()]);
+  if (!placeSnap.exists) {
+    throw new HttpsError("not-found", "Place not found.");
+  }
+  const place = placeSnap.data() || {};
+  if (place.active === false || place.stampable !== true) {
+    throw new HttpsError("failed-precondition", "Only active stamp places can issue QR codes.");
+  }
+
+  const currentSecret = secretSnap.exists ? secretSnap.data() || {} : {};
+  const shouldRotate = action === "rotate" || !currentSecret.token;
+  const token = shouldRotate ? crypto.randomBytes(24).toString("base64url") : currentSecret.token;
+  const version = shouldRotate ? Number(currentSecret.version || 0) + 1 : Number(currentSecret.version || 1);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  if (shouldRotate) {
+    await secretRef.set({
+      token,
+      version,
+      active: true,
+      eventId,
+      placeId,
+      updatedAt: now,
+      generatedBy: request.auth.uid,
+    }, { merge: true });
+  }
+  await placeRef.set({
+    qrRequired: true,
+    qrVersion: version,
+    qrUpdatedAt: now,
+  }, { merge: true });
+
+  const qrPayload = `https://dadaepo-festival.web.app/?point=${encodeURIComponent(placeId)}&token=${encodeURIComponent(token)}`;
+  return {
+    eventId,
+    placeId,
+    placeName: place.name || placeId,
+    version,
+    qrPayload,
+    rotated: shouldRotate,
+  };
+});
 
 exports.registerParticipant = onCall(async (request) => {
   if (!request.auth) {
@@ -144,11 +262,11 @@ exports.claimStamp = onCall(async (request) => {
   const uid = request.auth.uid;
   const eventId = String(request.data && request.data.eventId ? request.data.eventId : EVENT_ID);
   const requestId = cleanRequestId(request.data && request.data.requestId);
-  const stampPoint = findStampPoint(request.data || {});
 
   if (eventId !== EVENT_ID) {
     throw new HttpsError("invalid-argument", "Unsupported eventId.");
   }
+  const stampPoint = await findStampPoint(eventId, request.data || {});
   if (!requestId) {
     throw new HttpsError("invalid-argument", "requestId is required.");
   }
