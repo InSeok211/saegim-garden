@@ -622,12 +622,7 @@ h2 { font-size: 18px; }
   overflow: hidden;
   border: 1px solid #c9e1ee;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 20% 34%, rgba(185,232,204,.92) 0 9%, transparent 9.5%),
-    radial-gradient(circle at 82% 70%, rgba(187,233,211,.82) 0 10%, transparent 10.5%),
-    linear-gradient(35deg, transparent 47%, rgba(255,255,255,.86) 48% 52%, transparent 53%) 0 0/135px 96px,
-    linear-gradient(-35deg, transparent 47%, rgba(255,255,255,.82) 48% 52%, transparent 53%) 20px 10px/155px 110px,
-    #d8e9f4;
+  background: #f4dfb9 url("assets/map-beach-background-v3.webp") center/100% 100% no-repeat;
   cursor: crosshair;
 }
 .admin-place-map.is-dragging { cursor: grabbing; }
