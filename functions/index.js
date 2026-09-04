@@ -107,7 +107,7 @@ exports.managePlaceQr = onCall(async (request) => {
   if (eventId !== EVENT_ID || !placeId) {
     throw new HttpsError("invalid-argument", "A valid eventId and placeId are required.");
   }
-  if (!new Set(["get", "rotate", "delete"]).has(action)) {
+  if (!new Set(["get", "rotate"]).has(action)) {
     throw new HttpsError("invalid-argument", "Unsupported QR action.");
   }
 
@@ -117,13 +117,6 @@ exports.managePlaceQr = onCall(async (request) => {
   const [placeSnap, secretSnap] = await Promise.all([placeRef.get(), secretRef.get()]);
   if (!placeSnap.exists) {
     throw new HttpsError("not-found", "Place not found.");
-  }
-  if (action === "delete") {
-    const batch = db.batch();
-    batch.delete(placeRef);
-    batch.delete(secretRef);
-    await batch.commit();
-    return { eventId, placeId, deleted: true };
   }
   const place = placeSnap.data() || {};
   if (place.active === false || place.stampable !== true) {

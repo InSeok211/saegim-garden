@@ -269,7 +269,6 @@
     setText("placeFormMode", "새 장소");
     $("placeRemoveBtn").hidden = true;
     $("placeRestoreBtn").hidden = true;
-    $("placeDeleteBtn").hidden = true;
     if (has("placeQrPanel")) $("placeQrPanel").hidden = true;
     resetPlaceQrPreview();
     placeStatus("");
@@ -298,7 +297,6 @@
     setText("placeFormMode", place.active === false ? "사용자 지도에서 숨김" : "수정 중");
     $("placeRemoveBtn").hidden = place.active === false;
     $("placeRestoreBtn").hidden = place.active !== false;
-    $("placeDeleteBtn").hidden = false;
     placeStatus("");
     renderPlaceManager();
   }
@@ -374,30 +372,6 @@
     }
   }
 
-  async function deletePlacePermanently() {
-    if (!isPlaceAdmin() || !selectedPlaceId) {
-      placeStatus("Google 관리자 로그인 후 삭제할 수 있습니다.", "err");
-      return;
-    }
-    const place = placeById(selectedPlaceId);
-    const name = place?.name || selectedPlaceId;
-    if (!window.confirm(`‘${name}’ 장소를 완전히 삭제할까요?\n\n지도와 QR은 즉시 삭제되며 되돌릴 수 없습니다. 기존 참가자의 스탬프 이력은 유지됩니다.`)) return;
-    const deletingId = selectedPlaceId;
-    $("placeDeleteBtn").disabled = true;
-    placeStatus("장소와 QR을 완전히 삭제하는 중입니다.");
-    try {
-      const managePlaceQr = cloudFunctions.httpsCallable("managePlaceQr");
-      await managePlaceQr({ eventId: EVENT_ID, placeId: deletingId, action: "delete" });
-      resetPlaceForm();
-      placeStatus(`‘${name}’ 장소를 완전히 삭제했습니다.`, "ok");
-    } catch (error) {
-      console.error(error);
-      placeStatus("완전 삭제 실패: " + error.message, "err");
-    } finally {
-      $("placeDeleteBtn").disabled = false;
-    }
-  }
-
   async function saveDraggedPlacePosition(id, x, y) {
     if (!isPlaceAdmin()) return;
     placeStatus("새 위치를 저장하는 중입니다.");
@@ -470,7 +444,6 @@
     $("placeSeedBtn").addEventListener("click", seedDefaultPlaces);
     $("placeRemoveBtn").addEventListener("click", () => setPlaceActive(false));
     $("placeRestoreBtn").addEventListener("click", () => setPlaceActive(true));
-    $("placeDeleteBtn").addEventListener("click", deletePlacePermanently);
     $("placeStampable").addEventListener("change", () => {
       if (!$("placeStampable").checked) {
         $("placeQrPanel").hidden = true;
@@ -563,7 +536,6 @@
       $("placeLogoutBtn").hidden = !user;
       $("placeSaveBtn").disabled = !admin;
       $("placeSeedBtn").disabled = !admin;
-      $("placeDeleteBtn").disabled = !admin;
       if (has("placeQrViewBtn")) $("placeQrViewBtn").disabled = !admin || !selectedPlaceId;
       if (has("placeQrRotateBtn")) $("placeQrRotateBtn").disabled = !admin || !selectedPlaceId || !placeById(selectedPlaceId)?.qrRequired;
       if (user && !admin) placeStatus(`${ADMIN_EMAIL} 계정으로 로그인해야 편집할 수 있습니다.`, "err");

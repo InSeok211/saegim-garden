@@ -6,40 +6,11 @@
   <meta name="theme-color" content="#146c94" />
   <title>다대포 해변 맥주 축제 · 해변 가요제 모바일 안내</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=20260904-beach-map1" />
+  <link rel="stylesheet" href="styles.css?v=20260807-sponsor4" />
 </head>
 <body>
 
-<div class="entry-shell" id="entryShell">
-  <header class="entry-head">
-    <button class="entry-back" id="entryBack" type="button" aria-label="이전 화면" onclick="entryBack()" hidden>‹</button>
-    <div class="entry-brand"><span class="wave-mark">♫</span><span>다대포 해변 맥주 축제 · 해변 가요제</span></div>
-    <span style="width:48px" aria-hidden="true"></span>
-  </header>
-  <main class="entry-main">
-    <section class="entry-step active" id="entry-method" data-step="1">
-      <div class="entry-progress single"><i class="on"></i></div>
-      <span class="entry-kicker">참여 시작</span>
-      <h1 class="entry-title">로그인 없이<br>스탬프 투어를 시작하세요</h1>
-      <p class="entry-desc">회원가입, 전화번호 인증, 개인정보 입력 없이 이 브라우저에 익명 참가권을 만들고 바로 참여합니다.</p>
-      <div class="start-card">
-        <div class="demo-card-visual"><div class="demo-card-copy"><small>DADEPO BEACH FESTIVAL</small><strong>QR 스탬프 투어</strong><span id="entryPreviewCode">참가번호 발급 전</span></div><div class="mini-qr"></div></div>
-        <div class="guide-steps">
-          <div class="guide-step"><b>1</b><div><strong>공통 시작 QR 접속</strong><p>현장 포스터의 시작 QR로 이 화면을 엽니다.</p></div></div>
-          <div class="guide-step"><b>2</b><div><strong>익명 참가권 생성</strong><p>Firebase 익명 UID로 브라우저에 스탬프판을 연결합니다.</p></div></div>
-          <div class="guide-step"><b>3</b><div><strong>부스 QR 스캔</strong><p>참여 지점 QR을 찍어 5개 스탬프를 모읍니다.</p></div></div>
-        </div>
-        <button id="startStampTourBtn" class="entry-primary" type="button" onclick="startAnonymousEntry()">스탬프 투어 시작하기</button>
-        <div class="entry-status" id="entryStartStatus" role="status" aria-live="polite">같은 브라우저로 다시 접속하면 기존 스탬프판을 이어서 볼 수 있습니다.</div>
-      </div>
-      <div class="entry-note">카카오톡, 크롬, Safari, 네이버 앱은 서로 다른 브라우저로 인식될 수 있습니다. 처음 시작한 브라우저에서 계속 이용해 주세요.</div>
-    </section>
-
-    <footer class="entry-footer">다대포 해변 맥주 축제 · 해변 가요제 모바일 현장 안내 · 실증 시제품</footer>
-  </main>
-</div>
-
-<div class="app" id="mainApp" hidden>
+<div class="app" id="mainApp">
   <header class="topbar">
     <div class="top-row">
       <div class="brand">
@@ -65,7 +36,6 @@
         <div class="event-meta">
           <span>축제 당일</span>
           <span>다대포 행사장</span>
-          <span>운영시간 입력 예정</span>
         </div>
       </div>
 
@@ -86,23 +56,11 @@
       </div>
 
       <div class="section">
-        <div class="section-title"><h3>나의 스탬프 미션</h3></div>
-        <button class="home-stamp-card" onclick="goPage('scan')" aria-label="나의 스탬프 미션 열기">
-          <div><small id="homeParticipantLabel">개인 QR 카드 · P-001</small><strong id="homeStampCount">현재 0 / 5개</strong><p id="homeStampMessage">참여 점포 QR을 스캔해 도장을 모아보세요.</p></div>
-          <span class="arrow" aria-hidden="true">›</span>
-        </button>
-      </div>
-
-      <div class="section">
         <div class="section-title"><h3>바로 시작하기</h3></div>
         <div class="quick-grid priority-grid">
           <button class="quick-card priority-card" onclick="goPage('map')">
             <span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3.5 6.5 5-2.2 7 2.4 5-2.2v13l-5 2.2-7-2.4-5 2.2z"/><path d="M8.5 4.3v13M15.5 6.7v13"/></svg></span>
             <span class="quick-copy"><strong>축제 지도</strong><span>무대·점포·화장실·주차장 찾기</span></span><i class="card-arrow">›</i>
-          </button>
-          <button class="quick-card priority-card" onclick="goPage('scan')">
-            <span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg></span>
-            <span class="quick-copy"><strong>QR 스탬프</strong><span>내 진행률 확인하고 점포 QR 스캔</span></span><i class="card-arrow">›</i>
           </button>
         </div>
       </div>
@@ -120,6 +78,9 @@
       <div class="map-page-shell">
         <div class="map-wrap">
           <div class="map" id="festivalMap">
+            <div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
+            <span class="map-label" style="left:23px;top:176px">행사장 입구</span>
+            <span class="map-label" style="right:34px;top:244px">먹거리 구역</span>
             <div id="mapPins"></div>
           </div>
         </div>
@@ -132,7 +93,6 @@
           </div>
           <div class="map-filter-strip" id="filters">
             <button class="filter active" onclick="setFilter('전체',this)">전체</button>
-            <button class="filter" onclick="setFilter('미획득',this)">미획득</button>
             <button class="filter" onclick="setFilter('무대·공연',this)">무대·공연</button>
             <button class="filter" onclick="setFilter('먹거리',this)">먹거리</button>
             <button class="filter" onclick="setFilter('체험·판매',this)">체험·판매</button>
@@ -157,48 +117,6 @@
         <div class="map-list-head"><div><strong>점포·시설 목록</strong><span id="mapListSubtitle">전체 8곳</span></div><button class="map-list-close" onclick="toggleMapList(false)" aria-label="목록 닫기">×</button></div>
         <div class="map-list-scroll"><div class="place-list" id="placeList"></div></div>
       </aside>
-    </section>
-
-    <section class="page" id="scan">
-      <div class="page-head"><h2>나의 QR 스탬프</h2><p id="stampPageDescription">점포·부스 QR을 스캔해 방문 도장을 모아보세요.</p></div>
-      <div class="participant-summary">
-        <div class="participant-top"><div><small id="participantTypeText">참여 방식</small><h3 id="participantIdText">P-001</h3></div><span class="reward-chip" id="rewardChip">미션 진행 중</span></div>
-        <div class="stamp-board" id="stampBoard"></div>
-        <div class="stamp-progress"><span id="stampProgressBar"></span></div>
-        <div class="stamp-progress-text" id="stampProgressText">0 / 5개 완료</div>
-      </div>
-      <div class="stamp-main-actions">
-        <button class="btn primary scan-primary" onclick="toggleScannerPanel(true)">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg>
-          점포 QR 스캔하기
-        </button>
-        <button class="btn secondary" id="identityInfoButton" onclick="showPersonalQr()">내 참여 정보 보기</button>
-        <button class="btn secondary" onclick="goPage('map');setFilter('미획득')">도장 장소 찾기</button>
-        <button class="text-action" id="recoveryHelpButton" onclick="showRecoveryHelp()">기록 복구 방법 보기</button>
-      </div>
-
-      <div class="scanner-workspace" id="scannerWorkspace">
-        <div class="section-title"><h3>점포 QR 스캔</h3><button onclick="toggleScannerPanel(false)">닫기</button></div>
-        <div class="scan-card">
-          <div class="scanner-view scan-start-surface" id="scannerView" role="button" tabindex="0" aria-label="QR 스캔 시작" onclick="handleScannerSurfaceTap()" onkeydown="handleScannerSurfaceKey(event)">
-            <video id="qrVideo" playsinline muted></video>
-            <div class="scanner-placeholder" id="scannerPlaceholder">
-              <div class="camera-icon">▣</div>
-              <strong>QR 스캔하려면 터치해주세요</strong>
-              <p>카메라가 켜지면<br>점포 QR을 화면 안에 맞춰주세요.</p>
-            </div>
-            <div class="scan-frame" id="scanFrame"></div>
-          </div>
-          <p class="scan-status" id="scanStatus">위 화면을 터치하면 카메라가 켜집니다.</p>
-          <div class="qr-result" id="qrResult"><small>스캔 결과</small><strong id="qrResultText"></strong></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title"><h3>최근 도장 기록</h3><button onclick="renderStampUI()">새로고침</button></div>
-        <div class="stamp-history" id="stampHistory"></div>
-      </div>
-      <div class="section"><div class="notice-card"><span class="notice-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><b>개인 QR 카드 안내</b><p>개인 QR은 내 도장판을 여는 열쇠입니다. 다른 사람에게 공유하지 마세요. 실제 기록은 서버에 저장됩니다.</p></div></div></div>
     </section>
 
     <section class="page" id="schedule">
@@ -227,12 +145,6 @@
           <details><summary>행사 일정이 바뀔 수도 있나요?</summary><p>우천과 현장 상황에 따라 일부 일정이 변경될 수 있으며 상단 공지로 안내됩니다.</p></details>
           <details><summary>참여 점포 정보는 어디서 보나요?</summary><p>축제 지도에서 먹거리 또는 체험·판매 필터를 선택하면 점포 목록과 상세 정보를 확인할 수 있습니다.</p></details>
         </div>
-      </div>
-      <div class="test-reset-card">
-        <small>테스트 전용</small>
-        <strong>참여 흐름 처음부터 다시 보기</strong>
-        <p>현재 로그인·개인 QR·도장·임시 계정 데이터를 초기화하고 참여 방식 선택 화면부터 다시 시작합니다.</p>
-        <button class="test-reset-btn" type="button" onclick="resetTestFlow()">로그인·참여 선택부터 다시 시작</button>
       </div>
       <section class="partner-section" aria-labelledby="partnerTitle">
         <p class="partner-kicker">PARTNERS &amp; SPONSORS</p>
@@ -281,9 +193,6 @@
     <button class="nav-item" data-page="map" onclick="goPage('map',this)" aria-label="지도">
       <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 6.5 5-2.2 7 2.4 5-2.2v13l-5 2.2-7-2.4-5 2.2z"/><path d="M8.5 4.3v13M15.5 6.7v13"/></svg></span><span class="nav-label">지도</span>
     </button>
-    <button class="nav-item scan-nav" data-page="scan" onclick="goPage('scan',this)" aria-label="QR 스캔">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM14 14h2M14 16h2"/></svg></span><span class="nav-label">QR 스캔</span>
-    </button>
     <button class="nav-item" data-page="schedule" onclick="goPage('schedule',this)" aria-label="일정">
       <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16M8 13h3M13 13h3M8 16h3"/></svg></span><span class="nav-label">일정</span>
     </button>
@@ -298,11 +207,8 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="app.js?v=20260831-schedule-publish2"></script>
+  <script src="app.js?v=20260903-no-stamp1"></script>
 </body>
 </html>
