@@ -43,18 +43,7 @@
 
   const ADMIN_EMAIL = "rjbcom4263@gmail.com";
   const placesCol = db.collection("events").doc(EVENT_ID).collection("places");
-  const DEFAULT_PLACES = {
-    stage: { name: "메인 무대", category: "무대·공연", markerType: "stage", emoji: "🎤", summary: "해변 가요제 경연과 축하 공연이 열리는 중심 무대", hours: "17:00–21:00", info: "현재 해변 가요제 1부 경연이 진행 중입니다.", contact: "운영 안내소 문의", stampable: false, active: true, x: 42, y: 40, order: 10 },
-    food1: { name: "바다어묵", category: "먹거리", markerType: "food", emoji: "🍢", summary: "따뜻한 부산 어묵과 음료를 판매하는 참여 점포", hours: "16:00–21:30", info: "대표 메뉴: 꼬치어묵, 물떡, 어묵국물", contact: "현장 주문", stampable: true, code: "DADAE-001", active: true, x: 67, y: 60, order: 20 },
-    shop1: { name: "다대포 기념공방", category: "체험·판매", markerType: "info", emoji: "🎁", summary: "바다 테마 기념품과 간단한 만들기 체험", hours: "16:00–20:30", info: "판매: 키링, 엽서, 축제 기념 배지", contact: "인스타그램·현장 문의", stampable: true, code: "DADAE-002", active: true, x: 25, y: 65, order: 30 },
-    food2: { name: "바다 간식 부스", category: "먹거리", markerType: "food", emoji: "🍧", summary: "시원한 음료와 축제 간식을 판매하는 참여 부스", hours: "16:00–21:30", info: "대표 메뉴: 슬러시, 아이스크림, 음료", contact: "현장 주문", stampable: true, code: "DADAE-003", active: true, x: 82, y: 72, order: 40 },
-    experience1: { name: "해변 공예 체험", category: "체험·판매", markerType: "info", emoji: "🎨", summary: "다대포 바다를 주제로 작은 공예품을 만드는 체험 부스", hours: "16:00–20:30", info: "체험: 바다 키링과 미니 배지 만들기", contact: "현장 접수", stampable: true, code: "DADAE-004", active: true, x: 34, y: 52, order: 50 },
-    info: { name: "운영 안내소", category: "편의시설", markerType: "info", emoji: "ℹ️", summary: "행사 안내, 분실물, 일정 변경과 경품 수령 문의", hours: "15:30–행사 종료", info: "분실물 접수와 미션 경품 수령을 지원합니다.", contact: "051-000-0000", stampable: true, code: "DADAE-005", active: true, x: 12, y: 49, order: 60 },
-    toilet: { name: "공중화장실", category: "편의시설", markerType: "toilet", emoji: "🚻", summary: "행사장 북쪽 공중화장실", hours: "상시 이용", info: "장애인 화장실과 기저귀 교환대가 있습니다.", contact: "-", stampable: false, active: true, x: 73, y: 39, order: 70 },
-    parking: { name: "임시 주차장", category: "편의시설", markerType: "entrance", emoji: "🅿️", summary: "행사 방문객 임시 주차 구역", hours: "15:00–22:00", info: "혼잡 시 대중교통 이용을 권장합니다.", contact: "주차 안내요원 문의", stampable: false, active: true, x: 45, y: 83, order: 80 },
-  };
   let latestPlaces = [];
-  let placesPersisted = false;
   let selectedPlaceId = null;
   let placeAdminUser = null;
   let placeDrag = null;
@@ -242,13 +231,11 @@
         <span><strong>${escapeHtml(place.name || place.id)}</strong><small>${escapeHtml(place.category || "기타")} · ${place.stampable ? "QR 스탬프" : "일반 장소"}</small></span>
         <span class="place-state ${place.active === false ? "off" : ""}">${place.active === false ? "숨김" : "표시"}</span>
       </button>
-    `).join("") : `<div class="empty">아직 연결된 장소가 없습니다. ‘기존 장소 8개 연결’을 눌러 시작하세요.</div>`);
+    `).join("") : `<div class="empty">등록된 장소가 없습니다. ‘새 장소’를 눌러 추가하세요.</div>`);
     refreshMarkerIcons();
     const activeCount = sorted.filter((place) => place.active !== false).length;
     const stampCount = sorted.filter((place) => place.active !== false && place.stampable).length;
     setText("placeCountText", `표시 ${activeCount}곳 · QR ${stampCount}곳`);
-    if (has("placeSeedBtn")) $("placeSeedBtn").hidden = placesPersisted;
-
     BOOTH_POINTS = Object.fromEntries(sorted
       .filter((place) => place.stampable)
       .map((place) => [place.id, place.name || place.id]));
@@ -335,16 +322,7 @@
     $("placeSaveBtn").disabled = true;
     placeStatus("장소 정보를 저장하는 중입니다.");
     try {
-      if (!placesPersisted) {
-        const batch = db.batch();
-        Object.entries(DEFAULT_PLACES).forEach(([defaultId, place]) => {
-          batch.set(placesCol.doc(defaultId), { ...place, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-        });
-        batch.set(placesCol.doc(id), payload, { merge: true });
-        await batch.commit();
-      } else {
-        await placesCol.doc(id).set(payload, { merge: true });
-      }
+      await placesCol.doc(id).set(payload, { merge: true });
       selectedPlaceId = id;
       placeStatus("저장했습니다. 참가자 지도에 실시간으로 반영됩니다.", "ok");
       if (stampable) await loadPlaceQr(false, id);
@@ -376,23 +354,11 @@
     if (!isPlaceAdmin()) return;
     placeStatus("새 위치를 저장하는 중입니다.");
     try {
-      if (!placesPersisted) {
-        const batch = db.batch();
-        Object.entries(DEFAULT_PLACES).forEach(([defaultId, place]) => {
-          batch.set(placesCol.doc(defaultId), {
-            ...place,
-            ...(defaultId === id ? { x, y } : {}),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
-        });
-        await batch.commit();
-      } else {
-        await placesCol.doc(id).set({
-          x,
-          y,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-      }
+      await placesCol.doc(id).set({
+        x,
+        y,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
       placeStatus("핀 위치를 저장했습니다. 참가자 지도에도 바로 반영됩니다.", "ok");
     } catch (error) {
       console.error(error);
@@ -400,33 +366,10 @@
     }
   }
 
-  async function seedDefaultPlaces() {
-    if (!isPlaceAdmin()) {
-      placeStatus("Google 관리자 로그인 후 기존 장소를 연결할 수 있습니다.", "err");
-      return;
-    }
-    if (placesPersisted && !window.confirm("이미 장소가 있습니다. 기존 8개 장소의 기본값을 추가하거나 갱신할까요?")) return;
-    const batch = db.batch();
-    Object.entries(DEFAULT_PLACES).forEach(([id, place]) => {
-      batch.set(placesCol.doc(id), { ...place, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-    });
-    placeStatus("기존 장소를 Firestore에 연결하는 중입니다.");
-    try {
-      await batch.commit();
-      placeStatus("기존 장소 8개를 연결했습니다. 이제 두 지도에 같은 정보가 표시됩니다.", "ok");
-    } catch (error) {
-      console.error(error);
-      placeStatus("초기 장소 연결 실패: " + error.message, "err");
-    }
-  }
-
   function subscribePlaces() {
     if (!has("adminPlacePins")) return;
     placesCol.onSnapshot((snapshot) => {
-      placesPersisted = !snapshot.empty;
-      latestPlaces = snapshot.empty
-        ? Object.entries(DEFAULT_PLACES).map(([id, place]) => ({ id, ...place }))
-        : snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      latestPlaces = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       renderPlaceManager();
       if (selectedPlaceId && placeById(selectedPlaceId)) selectPlaceForEdit(selectedPlaceId, true);
     }, (error) => {
@@ -441,7 +384,6 @@
     resetPlaceForm();
     $("placeForm").addEventListener("submit", savePlace);
     $("placeNewBtn").addEventListener("click", resetPlaceForm);
-    $("placeSeedBtn").addEventListener("click", seedDefaultPlaces);
     $("placeRemoveBtn").addEventListener("click", () => setPlaceActive(false));
     $("placeRestoreBtn").addEventListener("click", () => setPlaceActive(true));
     $("placeStampable").addEventListener("change", () => {
@@ -535,7 +477,6 @@
       $("placeLoginBtn").hidden = Boolean(user);
       $("placeLogoutBtn").hidden = !user;
       $("placeSaveBtn").disabled = !admin;
-      $("placeSeedBtn").disabled = !admin;
       if (has("placeQrViewBtn")) $("placeQrViewBtn").disabled = !admin || !selectedPlaceId;
       if (has("placeQrRotateBtn")) $("placeQrRotateBtn").disabled = !admin || !selectedPlaceId || !placeById(selectedPlaceId)?.qrRequired;
       if (user && !admin) placeStatus(`${ADMIN_EMAIL} 계정으로 로그인해야 편집할 수 있습니다.`, "err");

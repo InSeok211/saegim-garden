@@ -10,17 +10,7 @@ try{firebase.initializeApp(firebaseConfig)}catch(e){}
 const db=firebase.firestore();
 const EVENT_ID='dadaepo-beer-2026';
 
-const DEFAULT_PLACES={
-  stage:{name:'메인 무대',category:'편의시설',markerType:'stage',emoji:'🎤',summary:'해변 가요제 경연과 축하 공연이 열리는 중심 무대',hours:'17:00–21:00',info:'현재 해변 가요제 1부 경연이 진행 중입니다.',contact:'운영 안내소 문의',stampable:false,active:true,x:42,y:40,order:10},
-  food1:{name:'바다어묵',category:'먹거리',markerType:'food',emoji:'🍢',summary:'따뜻한 부산 어묵과 음료를 판매하는 참여 점포',hours:'16:00–21:30',info:'대표 메뉴: 꼬치어묵, 물떡, 어묵국물',contact:'현장 주문',stampable:true,code:'DADAE-001',active:true,x:67,y:60,order:20},
-  shop1:{name:'다대포 기념공방',category:'체험·판매',emoji:'🎁',summary:'바다 테마 기념품과 간단한 만들기 체험',hours:'16:00–20:30',info:'판매: 키링, 엽서, 축제 기념 배지',contact:'인스타그램·현장 문의',stampable:true,code:'DADAE-002',active:true,x:25,y:65,order:30},
-  food2:{name:'바다 간식 부스',category:'먹거리',markerType:'food',emoji:'🍧',summary:'시원한 음료와 축제 간식을 판매하는 참여 부스',hours:'16:00–21:30',info:'대표 메뉴: 슬러시, 아이스크림, 음료',contact:'현장 주문',stampable:true,code:'DADAE-003',active:true,x:82,y:72,order:40},
-  experience1:{name:'해변 공예 체험',category:'체험·판매',emoji:'🎨',summary:'다대포 바다를 주제로 작은 공예품을 만드는 체험 부스',hours:'16:00–20:30',info:'체험: 바다 키링과 미니 배지 만들기',contact:'현장 접수',stampable:true,code:'DADAE-004',active:true,x:34,y:52,order:50},
-  info:{name:'운영 안내소',category:'편의시설',markerType:'info',emoji:'ℹ️',summary:'행사 안내, 분실물, 일정 변경과 경품 수령 문의',hours:'15:30–행사 종료',info:'분실물 접수와 미션 경품 수령을 지원합니다.',contact:'051-000-0000',stampable:true,code:'DADAE-005',active:true,x:12,y:49,order:60},
-  toilet:{name:'공중화장실',category:'편의시설',markerType:'toilet',emoji:'🚻',summary:'행사장 북쪽 공중화장실',hours:'상시 이용',info:'장애인 화장실과 기저귀 교환대가 있습니다.',contact:'-',stampable:false,active:true,x:73,y:39,order:70},
-  parking:{name:'임시 주차장',category:'편의시설',emoji:'🅿️',summary:'행사 방문객 임시 주차 구역',hours:'15:00–22:00',info:'혼잡 시 대중교통 이용을 권장합니다.',contact:'주차 안내요원 문의',stampable:false,active:true,x:45,y:83,order:80}
-};
-let places={...DEFAULT_PLACES};
+let places={};
 
 const MAP_MARKERS={
   food:{icon:'truck',label:'푸드트럭'},stage:{icon:'mic-2',label:'무대'},info:{icon:'info',label:'안내소'},
@@ -97,13 +87,9 @@ function renderMapPins(){
 function subscribePlaces(){
   try{
     db.collection('events').doc(EVENT_ID).collection('places').onSnapshot(snap=>{
-      if(snap.empty){
-        places={...DEFAULT_PLACES};
-      }else{
-        places=Object.fromEntries(snap.docs
-          .map(doc=>[doc.id,{...doc.data()}])
-          .filter(([,place])=>place.active!==false));
-      }
+      places=Object.fromEntries(snap.docs
+        .map(doc=>[doc.id,{...doc.data()}])
+        .filter(([,place])=>place.active!==false));
       if(selectedMapPlaceId&&!places[selectedMapPlaceId])clearMapSelection();
       renderMapPins();
       renderPlaces(currentFilter);

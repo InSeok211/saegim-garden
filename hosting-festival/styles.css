@@ -297,17 +297,8 @@ body.map-mode #map{height:calc(100dvh - 64px - env(safe-area-inset-top));min-hei
 .map-page-shell{position:relative;width:100%;height:100%;background:#dbeaf4;overflow:hidden}
 .map-page-shell .map-wrap{position:absolute;inset:0;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;overflow:hidden;touch-action:none;cursor:grab}
 .map-page-shell .map-wrap.is-dragging{cursor:grabbing}
-.map-page-shell .map{height:100%;min-height:100%;border-radius:0;transform-origin:0 0;will-change:transform;background:
-  radial-gradient(circle at 20% 34%,rgba(185,232,204,.92) 0 9%,transparent 9.5%),
-  radial-gradient(circle at 82% 70%,rgba(187,233,211,.82) 0 10%,transparent 10.5%),
-  linear-gradient(35deg,transparent 47%,rgba(255,255,255,.86) 48% 52%,transparent 53%) 0 0/135px 96px,
-  linear-gradient(-35deg,transparent 47%,rgba(255,255,255,.78) 48% 52%,transparent 53%) 15px 20px/160px 112px,
-  #dbe8ef;
-}
-.map-page-shell .map:before{bottom:-38px;height:150px;background:#8fd0ef;opacity:.9}
-.map-page-shell .map:after{left:18px;bottom:112px;font-size:12px;color:#2e7398;background:rgba(255,255,255,.78);padding:5px 9px;border-radius:999px}
-.map-page-shell .road{box-shadow:0 0 0 1px rgba(155,177,189,.12)}
-.map-page-shell .map-label{font-size:10px;background:rgba(255,255,255,.82);box-shadow:0 2px 8px rgba(31,73,97,.08)}
+.map-page-shell .map{height:100%;min-height:100%;border-radius:0;transform-origin:0 0;will-change:transform;background:#f4dfb9 url("assets/map-beach-background-v3.webp") center/100% 100% no-repeat}
+.map-page-shell .map:before,.map-page-shell .map:after,.map-page-shell .road,.map-page-shell .map-label{display:none}
 .map-page-shell .pin{width:40px;height:40px;border-width:3px;box-shadow:0 7px 16px rgba(20,108,148,.23);transition:transform .2s ease,opacity .2s ease,filter .2s ease}
 .map-page-shell .pin.active{transform:rotate(-45deg) scale(1.18);z-index:8}
 .map-page-shell .pin.is-muted{opacity:.2;filter:grayscale(1);pointer-events:none}
