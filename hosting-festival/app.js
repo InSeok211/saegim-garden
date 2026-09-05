@@ -13,13 +13,14 @@ const EVENT_ID='dadaepo-beer-2026';
 let places={};
 
 const MAP_MARKERS={
-  food:{icon:'truck',label:'푸드트럭'},stage:{icon:'mic-2',label:'무대'},info:{icon:'info',label:'안내소'},
+  food:{icon:'truck',label:'푸드트럭'},beer:{icon:'beer',label:'맥주'},stage:{icon:'mic-2',label:'무대'},info:{icon:'info',label:'안내소'},
   toilet:{icon:'toilet',label:'화장실'},medical:{icon:'cross',label:'의료·안전'},entrance:{icon:'log-in',label:'출입구'},
   seating:{icon:'armchair',label:'테이블·관람석'},default:{icon:'map-pin',label:'장소'}
 };
 function markerTypeFor(id,place={}){
   if(MAP_MARKERS[place.markerType])return place.markerType;
   const text=`${id} ${place.name||''} ${place.category||''}`.toLowerCase();
+  if(/맥주|beer/.test(text))return'beer';
   if(/화장실|toilet/.test(text))return'toilet';
   if(/의료|응급|안전|medical/.test(text))return'medical';
   if(/입구|출구|출입|entrance|gate/.test(text))return'entrance';

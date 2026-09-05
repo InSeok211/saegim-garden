@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12384f" />
   <title>부스 현황 | 운영 실시간 모니터</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="admin-monitor.css?v=20260905-map-sync1" />
+  <link rel="stylesheet" href="admin-monitor.css?v=20260905-beer-marker1" />
 </head>
 <body data-page="booths">
   <div class="admin-layout">
@@ -57,7 +57,7 @@
               <div class="place-form-head"><div><p class="eyebrow">Place Details</p><h3 id="placeFormTitle">새 장소 추가</h3></div><span id="placeFormMode" class="place-mode-chip">새 장소</span></div>
               <div class="place-form-grid">
                 <label class="bc-field"><span>장소 ID</span><input id="placeId" maxlength="32" placeholder="예: coffee1" autocomplete="off" /></label>
-                <label class="bc-field"><span>지도 마커</span><select id="placeMarkerType"><option value="food">푸드트럭</option><option value="stage">무대</option><option value="info">안내소</option><option value="toilet">화장실</option><option value="medical">의료·안전</option><option value="entrance">출입구</option><option value="seating">테이블·관람석</option></select></label>
+                <label class="bc-field"><span>지도 마커</span><select id="placeMarkerType"><option value="food">푸드트럭</option><option value="beer">맥주</option><option value="stage">무대</option><option value="info">안내소</option><option value="toilet">화장실</option><option value="medical">의료·안전</option><option value="entrance">출입구</option><option value="seating">테이블·관람석</option></select></label>
                 <label class="bc-field bc-full"><span>장소 이름</span><input id="placeName" maxlength="50" placeholder="사용자 지도에 표시할 이름" /></label>
                 <label class="bc-field"><span>분류</span><select id="placeCategory"><option>먹거리</option><option>체험·판매</option><option>편의시설</option><option>무대·공연</option><option>기타</option></select></label>
                 <label class="bc-field"><span>도장 아이콘</span><input id="placeEmoji" maxlength="8" placeholder="예: ☕" /></label>
@@ -118,6 +118,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="admin-monitor.js?v=20260905-map-pointer2"></script>
+  <script src="admin-monitor.js?v=20260905-beer-marker1"></script>
 </body>
 </html>
