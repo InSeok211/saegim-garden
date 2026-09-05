@@ -234,9 +234,14 @@ function setupMapGestures(){
   const wrap=document.querySelector('.map-page-shell .map-wrap');if(!wrap)return;
   wrap.addEventListener('pointerdown',event=>{
     if(event.pointerType==='mouse'&&event.button!==0)return;
-    wrap.setPointerCapture(event.pointerId);mapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    suppressMapClick=false;
+    mapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if(mapPointers.size===1)mapGestureMoved=false;
-    startMapGesture();wrap.classList.add('is-dragging');
+    startMapGesture();
+    if(mapPointers.size>=2){
+      mapPointers.forEach((_,pointerId)=>{try{wrap.setPointerCapture(pointerId)}catch(e){}});
+      wrap.classList.add('is-dragging');
+    }
   });
   wrap.addEventListener('pointermove',event=>{
     if(!mapPointers.has(event.pointerId))return;
@@ -249,7 +254,10 @@ function setupMapGestures(){
       mapGestureMoved=true;applyMapView();
     }else if(points.length===1&&mapGesture.type==='pan'&&mapView.scale>MAP_MIN_SCALE){
       const dx=points[0].x-mapGesture.startX;const dy=points[0].y-mapGesture.startY;
-      if(Math.abs(dx)+Math.abs(dy)>4)mapGestureMoved=true;
+      if(!mapGestureMoved&&Math.abs(dx)+Math.abs(dy)>4){
+        mapGestureMoved=true;wrap.setPointerCapture(event.pointerId);wrap.classList.add('is-dragging');
+      }
+      if(!mapGestureMoved)return;
       mapView.x=mapGesture.x+dx;mapView.y=mapGesture.y+dy;applyMapView();
     }
   });
@@ -257,12 +265,12 @@ function setupMapGestures(){
     mapPointers.delete(event.pointerId);
     if(!mapPointers.size){
       wrap.classList.remove('is-dragging');
-      if(mapGestureMoved){suppressMapClick=true;setTimeout(()=>{suppressMapClick=false},80)}
+      if(mapGestureMoved)suppressMapClick=true;
     }
     startMapGesture();
   };
-  wrap.addEventListener('pointerup',endPointer);wrap.addEventListener('pointercancel',endPointer);
-  wrap.addEventListener('click',event=>{if(suppressMapClick){event.preventDefault();event.stopPropagation()}},true);
+  window.addEventListener('pointerup',endPointer);window.addEventListener('pointercancel',endPointer);
+  wrap.addEventListener('click',event=>{if(suppressMapClick){suppressMapClick=false;event.preventDefault();event.stopPropagation()}},true);
   wrap.addEventListener('wheel',event=>{
     event.preventDefault();const rect=wrap.getBoundingClientRect();
     setMapScale(mapView.scale+(event.deltaY<0?.25:-.25),event.clientX-rect.left,event.clientY-rect.top);

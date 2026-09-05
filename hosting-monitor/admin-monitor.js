@@ -47,6 +47,7 @@
   let selectedPlaceId = null;
   let placeAdminUser = null;
   let placeDrag = null;
+  let suppressPlaceClick = false;
   let currentQrPayload = "";
   let currentQrDataUrl = "";
   let currentQrPlaceId = "";
@@ -406,6 +407,7 @@
     adminMap.addEventListener("pointerdown", (event) => {
       const pin = event.target.closest("button[data-place-id]");
       if (!pin) return;
+      suppressPlaceClick = false;
       if (!isPlaceAdmin()) {
         placeStatus("Google 관리자 로그인 후 핀을 이동할 수 있습니다.", "err");
         return;
@@ -413,7 +415,7 @@
       event.preventDefault();
       const id = pin.dataset.placeId;
       if (selectedPlaceId !== id) selectPlaceForEdit(id, false, false);
-      adminMap.setPointerCapture(event.pointerId);
+      pin.setPointerCapture(event.pointerId);
       placeDrag = { id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
       adminMap.classList.add("is-dragging");
       adminMap.querySelector(`button[data-place-id="${id}"]`)?.classList.add("dragging");
@@ -444,6 +446,7 @@
       adminMap.classList.remove("is-dragging");
       adminMap.querySelectorAll(".admin-place-pin.dragging").forEach((pin) => pin.classList.remove("dragging"));
       if (!finishedDrag.moved) return;
+      suppressPlaceClick = true;
       const place = placeById(finishedDrag.id);
       if (place) {
         place.x = finishedDrag.x;
@@ -458,6 +461,12 @@
       adminMap.querySelectorAll(".admin-place-pin.dragging").forEach((pin) => pin.classList.remove("dragging"));
     });
     adminMap.addEventListener("click", (event) => {
+      if (suppressPlaceClick) {
+        suppressPlaceClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       const pin = event.target.closest("button[data-place-id]");
       if (pin) {
         if (selectedPlaceId !== pin.dataset.placeId) selectPlaceForEdit(pin.dataset.placeId);
@@ -467,7 +476,7 @@
       $("placeX").value = Math.round(clamp(((event.clientX - rect.left) / rect.width) * 100, 3, 94));
       $("placeY").value = Math.round(clamp(((event.clientY - rect.top) / rect.height) * 100, 8, 90));
       setText("placePositionHint", `선택 위치: 가로 ${$("placeX").value}% · 세로 ${$("placeY").value}%`);
-    });
+    }, true);
     $("adminPlaceList").addEventListener("click", (event) => {
       const item = event.target.closest("button[data-place-id]");
       if (item) selectPlaceForEdit(item.dataset.placeId);
