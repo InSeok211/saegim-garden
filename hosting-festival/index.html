@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#146c94" />
   <title>다대포 해변 맥주 축제 · 해변 가요제 모바일 안내</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=20260807-sponsor4" />
+  <link rel="stylesheet" href="styles.css?v=20260905-map-zoom1" />
 </head>
 <body>
 
@@ -104,6 +104,8 @@
         <button class="map-list-trigger" id="mapListTrigger" onclick="toggleMapList(true)" aria-controls="mapListPanel" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>목록 <b id="mapResultCount">8</b></button>
 
         <div class="map-floating-tools">
+          <button class="map-float-btn map-zoom-btn" id="mapZoomIn" onclick="zoomMap(1)" aria-label="지도 확대">+</button>
+          <button class="map-float-btn map-zoom-btn" id="mapZoomOut" onclick="zoomMap(-1)" aria-label="지도 축소">−</button>
           <button class="map-float-btn" onclick="resetMapView()" aria-label="지도 초기 위치"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66"/><path d="M20 4v7h-7"/></svg></button>
           <button class="map-float-btn primary" onclick="showCurrentLocation()" aria-label="현재 위치"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
         </div>
@@ -209,6 +211,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="app.js?v=20260903-no-stamp1"></script>
+  <script src="app.js?v=20260905-map-zoom1"></script>
 </body>
 </html>
