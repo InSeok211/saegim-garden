@@ -262,7 +262,7 @@
     renderPlaceManager();
   }
 
-  function selectPlaceForEdit(id, preserveQrPreview = false) {
+  function selectPlaceForEdit(id, preserveQrPreview = false, rerender = true) {
     const place = placeById(id);
     if (!place || !has("placeForm")) return;
     selectedPlaceId = id;
@@ -285,7 +285,12 @@
     $("placeRemoveBtn").hidden = place.active === false;
     $("placeRestoreBtn").hidden = place.active !== false;
     placeStatus("");
-    renderPlaceManager();
+    if (rerender) {
+      renderPlaceManager();
+    } else {
+      document.querySelectorAll("#adminPlacePins .admin-place-pin").forEach((pin) => pin.classList.toggle("selected", pin.dataset.placeId === id));
+      document.querySelectorAll("#adminPlaceList .admin-place-item").forEach((item) => item.classList.toggle("selected", item.dataset.placeId === id));
+    }
   }
 
   async function savePlace(event) {
@@ -407,13 +412,14 @@
       }
       event.preventDefault();
       const id = pin.dataset.placeId;
-      if (selectedPlaceId !== id) selectPlaceForEdit(id);
-      placeDrag = { id, startX: event.clientX, startY: event.clientY, moved: false };
+      if (selectedPlaceId !== id) selectPlaceForEdit(id, false, false);
+      adminMap.setPointerCapture(event.pointerId);
+      placeDrag = { id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
       adminMap.classList.add("is-dragging");
       adminMap.querySelector(`button[data-place-id="${id}"]`)?.classList.add("dragging");
     });
     window.addEventListener("pointermove", (event) => {
-      if (!placeDrag) return;
+      if (!placeDrag || event.pointerId !== placeDrag.pointerId) return;
       const distance = Math.hypot(event.clientX - placeDrag.startX, event.clientY - placeDrag.startY);
       if (distance < 3 && !placeDrag.moved) return;
       placeDrag.moved = true;
@@ -431,8 +437,8 @@
       }
       setText("placePositionHint", `이동 위치: 가로 ${x}% · 세로 ${y}%`);
     });
-    window.addEventListener("pointerup", async () => {
-      if (!placeDrag) return;
+    window.addEventListener("pointerup", async (event) => {
+      if (!placeDrag || event.pointerId !== placeDrag.pointerId) return;
       const finishedDrag = placeDrag;
       placeDrag = null;
       adminMap.classList.remove("is-dragging");
@@ -445,7 +451,8 @@
       }
       await saveDraggedPlacePosition(finishedDrag.id, finishedDrag.x, finishedDrag.y);
     });
-    window.addEventListener("pointercancel", () => {
+    window.addEventListener("pointercancel", (event) => {
+      if (!placeDrag || event.pointerId !== placeDrag.pointerId) return;
       placeDrag = null;
       adminMap.classList.remove("is-dragging");
       adminMap.querySelectorAll(".admin-place-pin.dragging").forEach((pin) => pin.classList.remove("dragging"));
